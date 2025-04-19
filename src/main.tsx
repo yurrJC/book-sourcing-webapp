@@ -55,7 +55,7 @@ const amazonSectionStyles = `
   text-align: center;
   margin-bottom: 2rem;
   padding: 2rem 0;
-  background: linear-gradient(135deg, #4285F4 0%, #34a853 100%);
+  background: #f0f0f0; /* Changed from gradient to grey */
   color: white;
   border-radius: 0 0 16px 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
@@ -87,14 +87,18 @@ const amazonSectionStyles = `
   z-index: 0;
 }
 
-.scanwise-header h1 {
+.scanwise-header .logo-container {
   margin: 0;
-  font-size: 2.8rem;
-  letter-spacing: 1px;
-  font-weight: 700;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scanwise-header .logo {
+  height: 80px;
+  max-width: 100%;
 }
 
 .tagline {
@@ -102,6 +106,7 @@ const amazonSectionStyles = `
   font-size: 1.2rem;
   font-weight: 300;
   opacity: 0.9;
+  color: #333; /* Changed text color for better contrast against grey background */
 }
 
 .isbn-group {
@@ -1760,7 +1765,9 @@ function App() {
       {!searchResult ? (
         <div className="content-area">
           <div className="scanwise-header">
-            <h1>ScanWise</h1>
+            <div className="logo-container">
+              <img src="/images/scanwise-logo.png" alt="ScanWise Logo" className="logo" />
+            </div>
           </div>
           <div className="input-area">
             <form onSubmit={handleSearch}>
