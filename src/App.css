@@ -1,0 +1,562 @@
+:root {
+  /* Color Variables */
+  --primary: #3a86ff;
+  --secondary: #0056b3;
+  --accent: #ff5a5f;
+  --background: #f5f5f5;
+  --surface: #ffffff;
+  --text: #333333;
+  --text-light: #767676;
+  --border: #dddddd;
+  --radius: 8px;
+  --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --success: #27ae60;
+  --warning: #f39c12;
+  --danger: #e74c3c;
+  --disabled: #9aa0a6;
+  
+  /* New Scoutly specific colors */
+  --buy-color: #34a853;
+  --buy-background: rgba(52, 168, 83, 0.1);
+  --reject-color: #ea4335;
+  --reject-background: rgba(234, 67, 53, 0.1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  background-color: var(--background);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.App {
+  margin: 0 auto;
+  background-color: var(--surface);
+  min-height: 100vh;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  padding: 1rem 0;
+  text-align: center;
+  background-color: var(--primary);
+  color: white;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 0.75rem;
+}
+
+h3 {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+
+.count {
+  background-color: var(--primary);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.input-area {
+  padding: 1rem;
+  background-color: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.isbn-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+input, select {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 1rem;
+  width: 100%;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+}
+
+.search-button {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: var(--secondary);
+}
+
+.search-button:disabled {
+  background-color: var(--border);
+  cursor: not-allowed;
+}
+
+/* Results styling */
+.results-container {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* Style the new results wrapper */
+.results-content-wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  padding-bottom: 80px;
+  width: 100%;
+}
+
+/* Verdict Banner */
+.verdict-banner {
+  padding: 1rem;
+  color: white;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.verdict-banner.buy {
+  background-color: var(--success);
+}
+
+.verdict-banner.reject {
+  background-color: var(--danger);
+}
+
+.verdict-label {
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+.target-price, .profit, .str-value, .threshold-value {
+  font-weight: 700;
+}
+
+.str-value {
+  color: #ffffff;
+  font-size: 1.1rem;
+}
+
+.threshold-value {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Metrics Banner */
+.metrics-banner {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.metric span:first-child {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.metric .value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.metric .stage-value {
+  color: var(--primary);
+  background-color: rgba(58, 134, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+}
+
+/* Listings Container */
+.listings-container {
+  padding: 0.75rem;
+}
+
+.listings-section {
+  margin-bottom: 1.5rem;
+}
+
+.listings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.listing-item {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: var(--radius);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  align-items: center;
+}
+
+.price {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.shipping {
+  color: var(--text-light);
+  font-size: 0.9rem;
+}
+
+.total {
+  font-weight: 600;
+}
+
+.date {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* Chart Section */
+.chart-section {
+  height: 200px;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+}
+
+/* Manual Input Section */
+.manual-input-container {
+  padding: 1rem;
+}
+
+.manual-input-container h3 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+
+.instructions {
+  color: var(--text-light);
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.manual-input-section {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.input-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.ebay-link-button {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  color: var(--text);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.ebay-link-button:hover {
+  background-color: var(--border);
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-field label {
+  font-size: 0.9rem;
+}
+
+.optional-text {
+  font-size: 0.8rem;
+  font-style: italic;
+  color: var(--text-light);
+  font-weight: normal;
+}
+
+.calculate-button {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: 1rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
+
+.calculate-button:hover {
+  background-color: var(--secondary);
+}
+
+.calculate-button:disabled {
+  background-color: var(--border);
+  cursor: not-allowed;
+}
+
+.verdict-reason {
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+/* Book Info Section */
+.book-info {
+  padding: 1rem;
+  display: flex;
+  gap: 1rem;
+  border-top: 1px solid var(--border);
+  background-color: var(--background);
+}
+
+.book-image {
+  width: 80px;
+  height: 120px;
+  background-color: var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+}
+
+.scan-label {
+  transform: rotate(-90deg);
+  color: var(--text-light);
+  font-size: 0.9rem;
+  letter-spacing: 2px;
+}
+
+.book-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.book-title {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.book-author {
+  color: var(--text-light);
+  margin-bottom: 0.25rem;
+}
+
+.book-weight {
+  font-size: 0.8rem;
+  color: var(--text-light);
+}
+
+/* Add styles for Amazon data in book info */
+.book-amazon-price,
+.book-amazon-rank,
+.book-isbn {
+  font-size: 0.8rem;
+  color: var(--text-light);
+  margin-top: 0.25rem; /* Add a little space above */
+}
+
+.scan-button {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+/* Bottom Toolbar */
+.bottom-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background-color: var(--surface);
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  z-index: 50;
+}
+
+.toolbar-button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.toolbar-button.active {
+  color: var(--primary);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+  margin-bottom: 0.25rem;
+  background-color: currentColor;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+  mask-position: center;
+  -webkit-mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+}
+
+.search-icon {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15.5 14h-.79l-.28-.27a6.5 6.5 0 0 0 1.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 0 0-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 0 0 5.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z'/%3E%3C/svg%3E");
+}
+
+.list-icon {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z'/%3E%3C/svg%3E");
+}
+
+.ocr-icon {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9.5 6.5v3h-3v-3h3M11 5H5v6h6V5zm-1.5 9.5v3h-3v-3h3M11 13H5v6h6v-6zm6.5-6.5v3h-3v-3h3M19 5h-6v6h6V5zm-6 8h1.5v1.5H13V13zm1.5 1.5H16V16h-1.5v-1.5zM16 13h1.5v1.5H16V13zm-3 3h1.5v1.5H13V16zm1.5 1.5H16V19h-1.5v-1.5zM16 16h1.5v1.5H16V16zm1.5-1.5H19V16h-1.5v-1.5zm0 3H19V19h-1.5v-1.5zM22 7h-2V4h-3V2h5v5zm0 15v-5h-2v3h-3v2h5zM2 22h5v-2H4v-3H2v5zM2 2v5h2V4h3V2H2z'/%3E%3C/svg%3E");
+}
+
+.history-icon {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M13 3a9 9 0 0 0-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42A8.954 8.954 0 0 0 13 21a9 9 0 0 0 0-18zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z'/%3E%3C/svg%3E");
+}
+
+.more-icon {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/%3E%3C/svg%3E");
+}
+
+/* Loading & Error States */
+.loading {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--primary);
+  z-index: 100;
+}
+
+.error-message {
+  padding: 1rem;
+  background-color: rgba(231, 76, 60, 0.1);
+  color: var(--danger);
+  border-radius: var(--radius);
+  margin: 1rem;
+  text-align: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .verdict-label {
+    font-size: 1.2rem;
+  }
+  
+  .listing-item {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+  
+  .date {
+    grid-column: span 3;
+    text-align: right;
+  }
+}

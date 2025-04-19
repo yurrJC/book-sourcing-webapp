@@ -1,0 +1,982 @@
+/* UI Enhancements for ScanWise */
+
+:root {
+  --primary: #4285F4;
+  --secondary: #1a73e8;
+  --primary-dark: #1967d2;
+  --success: #34a853;
+  --warning: #fbbc05;
+  --danger: #ea4335;
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --border: #dadce0;
+  --background: #f5f5f5;
+  --surface: #ffffff;
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 6px rgba(0, 0, 0, 0.12);
+  --radius-sm: 6px;
+  --radius-md: 8px;
+}
+
+/* App Container */
+.App {
+  max-width: 1400px;
+  width: 95%;
+  margin: 0 auto;
+  background-color: var(--surface);
+  min-height: 100vh;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Desktop container optimization */
+@media (min-width: 1200px) {
+  .App {
+    width: 90%;
+  }
+}
+
+/* Tablet container optimization */
+@media (max-width: 1199px) and (min-width: 768px) {
+  .App {
+    width: 95%;
+  }
+}
+
+/* Mobile container optimization */
+@media (max-width: 767px) {
+  .App {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Header */
+h1 {
+  font-size: 2rem;
+  font-weight: 600;
+  padding: 1.5rem 0;
+  text-align: center;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: white;
+  box-shadow: var(--shadow-md);
+  margin: 0;
+}
+
+/* Results Layout Optimization */
+.results-content-wrapper {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 0.3rem 3px;
+  width: 100%;
+}
+
+/* Desktop Layout - Single Column Stacked */
+@media (min-width: 992px) {
+  .results-content-wrapper {
+    display: block;
+    padding: 1rem 2rem 80px;
+  }
+  
+  .verdict-banner,
+  .metrics-banner {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .two-column-layout {
+    display: block !important;
+    width: 100%;
+  }
+  
+  .manual-input-container {
+    margin-right: auto;
+    margin-left: auto;
+    max-width: 850px;
+    width: 100%;
+    background-color: white;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 0;
+  }
+}
+
+/* Input Area */
+.input-area {
+  padding: 1.5rem;
+  max-width: 800px;
+  margin: 1rem auto;
+  background-color: var(--surface);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+}
+
+.isbn-input-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-group label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.input-group input, 
+.input-group select {
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.search-button {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+  padding: 0.75rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  margin-top: 0.5rem;
+}
+
+.search-button:hover {
+  background-color: var(--secondary);
+}
+
+.search-button:active {
+  background-color: var(--primary-dark);
+}
+
+.search-button:disabled {
+  background-color: var(--border);
+  cursor: not-allowed;
+}
+
+/* Verdict Banner */
+.verdict-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 8px;
+  margin-bottom: 6px;
+  border-radius: var(--radius-md);
+  color: white;
+  text-align: center;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.verdict-banner.buy {
+  background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+.verdict-banner.reject {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+}
+
+.verdict-banner.check {
+  background: linear-gradient(135deg, #f39c12, #d35400);
+}
+
+.verdict-label {
+  font-size: 1.2rem;
+  margin-bottom: 0;
+  text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.str-value, .threshold-value {
+  font-weight: bold;
+}
+
+.lowest-price-alert {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+}
+
+/* Metrics Banner */
+.metrics-banner {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+/* Enhanced metrics layout for desktop */
+@media (min-width: 992px) {
+  .metrics-banner {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  }
+}
+
+.metric {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 6px;
+  background-color: white;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.metric span:first-child {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 1px;
+}
+
+.value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.price-breakdown, .inventory-counts, .item-condition {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  margin-top: 1px;
+  line-height: 1.2;
+}
+
+.stage-value {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+/* Manual Data Entry Section */
+.manual-input-container {
+  background-color: white;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  padding: 5px 8px;
+  margin-bottom: 6px;
+}
+
+.manual-input-container h3 {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 3px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.instructions {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 3px;
+  gap: 5px;
+  align-items: center;
+}
+
+.button-container {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 3px;
+}
+
+.ebay-link-button,
+.teapeak-link-button {
+  padding: 2px 5px;
+  background-color: #f8f9fa;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  color: var(--text-primary);
+  text-decoration: none;
+  height: 20px;
+  min-width: 80px;
+  width: 80px;
+}
+
+.ebay-link-button:hover,
+.teapeak-link-button:hover {
+  background-color: #f1f3f4;
+}
+
+.debug-button {
+  padding: 8px 12px;
+  background-color: #f1f3f4;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s;
+  color: var(--text-secondary);
+}
+
+.debug-button:hover {
+  background-color: #e8eaed;
+}
+
+.input-field {
+  flex: 1;
+  min-width: 180px;
+}
+
+.input-field label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 1px;
+  font-weight: 500;
+}
+
+.input-field input {
+  width: 100%;
+  padding: 2px 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  transition: border 0.2s;
+  background-color: #f8f9fa;
+  height: 22px;
+}
+
+.input-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
+  background-color: white;
+}
+
+.calculate-button {
+  width: 100%;
+  padding: 4px;
+  background-color: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  margin-bottom: 3px;
+  height: 26px;
+}
+
+.calculate-button:hover {
+  background-color: var(--secondary);
+}
+
+.calculate-button:disabled {
+  background-color: #dadce0;
+  cursor: not-allowed;
+}
+
+.verdict-reason {
+  margin-top: 4px;
+  padding: 4px 6px;
+  background-color: #f8f9fa;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  border-left: 4px solid var(--primary);
+  line-height: 1.3;
+}
+
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  text-align: center;
+}
+
+.loading:after {
+  content: "";
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-top: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  padding: 15px;
+  margin: 20px 0;
+  background-color: #fdeded;
+  border-left: 4px solid var(--danger);
+  color: #5f2120;
+  border-radius: var(--radius-sm);
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 768px) {
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .button-container {
+    flex-direction: column;
+  }
+  
+  .metrics-banner {
+    grid-template-columns: 1fr;
+  }
+  
+  .metric {
+    padding: 12px;
+  }
+}
+
+/* Specific adjustments for the data entry form */
+.manual-input-section {
+  display: grid;
+  gap: 15px;
+}
+
+@media (min-width: 768px) {
+  .manual-input-section {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .input-field.full-width {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Improved input fields for numeric inputs */
+input[type="number"] {
+  text-align: right;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+}
+
+/* Additional spacing for the form */
+.manual-data-entry {
+  margin-top: 20px;
+}
+
+/* Zoom correction for proper display */
+@media screen {
+  html {
+    zoom: 1;
+  }
+}
+
+/* Make the footer sticky and always visible */
+.bottom-toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+/* Book Display Component Styles */
+.book-display-container {
+  margin-top: 6px;
+  background-color: white;
+  border-radius: 12px;
+  padding: 5px 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e0e0e0;
+}
+
+.book-display-container h3 {
+  margin-bottom: 3px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 3px;
+}
+
+.book-display {
+  display: flex;
+  gap: 8px;
+}
+
+.book-image {
+  width: 50px;
+  min-width: 50px;
+  height: 75px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.book-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.placeholder-cover {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
+  color: #999;
+  text-align: center;
+  font-size: 0.8rem;
+  padding: 10px;
+}
+
+.book-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.book-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0 0 5px 0;
+  line-height: 1.3;
+}
+
+.book-author, .book-isbn, .book-publisher, .book-binding {
+  font-size: 0.8rem;
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px;
+  line-height: 1.4;
+}
+
+.book-info .label {
+  font-weight: 600;
+  color: var(--text-secondary);
+  min-width: 40px;
+}
+
+.book-info .value {
+  color: var(--text-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .book-display {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .book-image {
+    width: 140px;
+    height: 210px;
+  }
+  
+  .book-info {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .book-author, .book-isbn, .book-publisher, .book-binding {
+    justify-content: center;
+  }
+}
+
+/* Scan Again Button Styles - Top position and larger size */
+.scan-again-container-top {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 6px auto;
+  padding: 0 10px;
+}
+
+.scan-again-button-large {
+  width: 180px;
+  height: 36px;
+  background-color: #00c853; /* Brighter green */
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.scan-again-button-large:hover {
+  background-color: #00b34a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.scan-again-button-large:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 767px) {
+  .scan-again-button-large {
+    width: 140px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Keep two-column layout gap minimal */
+.two-column-layout {
+  gap: 5px;
+}
+
+/* Mobile adjustments: keep containers small, restore fonts */
+@media (max-width: 767px) {
+  .verdict-label {
+    font-size: 1rem;
+  }
+  
+  .book-image {
+    width: 45px;
+    height: 65px;
+  }
+  
+  .book-info .label {
+    min-width: 35px;
+    font-size: 0.75rem;
+  }
+  
+  .input-field input {
+    height: 20px;
+    font-size: 0.8rem;
+  }
+  
+  .manual-input-container, .book-display-container {
+    padding: 2px 4px;
+  }
+  
+  .scan-again-button-large {
+    width: 140px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Mobile optimization for manual data entry */
+@media (max-width: 767px) {
+  /* Override earlier mobile adjustments */
+  .manual-input-container {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+  
+  .manual-input-container h3 {
+    font-size: 1rem;
+    text-align: center;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+  }
+  
+  .instructions {
+    font-size: 0.8rem;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  
+  /* Fix input row layout on mobile */
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 12px;
+    gap: 4px;
+  }
+  
+  /* Improve button styling */
+  .button-container {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 4px;
+  }
+  
+  .ebay-link-button,
+  .teapeak-link-button {
+    width: 100%;
+    min-width: 100%;
+    height: 32px;
+    font-size: 0.85rem;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  
+  /* Improve input field styling */
+  .input-field {
+    width: 100%;
+  }
+  
+  .input-field label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+  
+  .input-field input {
+    height: 36px;
+    font-size: 0.9rem;
+    padding: 0 10px;
+    background-color: white;
+  }
+  
+  /* Improve calculate button */
+  .calculate-button {
+    height: 40px;
+    font-size: 0.95rem;
+    margin-top: 8px;
+    margin-bottom: 8px;
+  }
+  
+  /* Clean up the manual input section grid */
+  .manual-input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  /* Make verdict reason more readable */
+  .verdict-reason {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+    line-height: 1.4;
+  }
+}
+
+/* Even smaller screens */
+@media (max-width: 360px) {
+  .manual-input-container {
+    padding: 6px 10px;
+  }
+  
+  .ebay-link-button,
+  .teapeak-link-button {
+    height: 28px;
+    font-size: 0.8rem;
+  }
+  
+  .input-field label {
+    font-size: 0.8rem;
+  }
+  
+  .input-field input {
+    height: 32px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Mobile optimization for data entry form */
+@media (max-width: 767px) {
+  .mobile-optimized {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important; /* Increased gap for side-by-side */
+  }
+  
+  .input-row {
+    flex-direction: row !important; /* Side-by-side */
+    align-items: center !important; /* Vertically align button and input */
+    margin-bottom: 0 !important;
+    gap: 8px !important;
+  }
+  
+  .button-container {
+    flex: 0 0 90px; /* Fixed width for button container */
+    width: 90px !important;
+    margin-right: 0 !important;
+    margin-bottom: 0 !important; /* Remove bottom margin */
+  }
+  
+  .mobile-button {
+    width: 100% !important;
+    height: 38px !important; /* Match input height */
+    font-size: 0.8rem !important;
+    justify-content: center !important;
+    padding: 0 5px !important;
+    margin-bottom: 0 !important;
+    background-color: #f0f2f5 !important; /* Lighter background */
+    border: 1px solid #d9dce1 !important;
+    box-shadow: none !important;
+    white-space: normal; /* Allow text wrapping */
+    line-height: 1.2;
+    text-align: center;
+  }
+  
+  /* Ensure Amazon logo fits */
+  .mobile-button .amazon-logo {
+      max-height: 18px;
+      width: auto;
+  }
+  
+  .mobile-field {
+    flex: 1 !important; /* Input field takes remaining space */
+    width: auto !important;
+    min-width: 0 !important;
+  }
+  
+  /* Floating label adjustments for mobile */
+  .floating-label-container label {
+      left: 10px;
+      font-size: 0.9rem; /* Adjust base size for mobile */
+      background-color: none; /* May not need bg on mobile */
+      padding: 0 2px;
+  }
+  
+  .floating-label-container input:focus + label,
+  .floating-label-container input:not(:placeholder-shown) + label {
+      font-size: 0.7rem; /* Adjust floated size */
+  }
+  
+  .mobile-input {
+    height: 38px !important;
+    font-size: 0.9rem !important; /* Slightly smaller input text */
+    padding: 10px 10px 0 10px !important; /* Adjust padding for floating label */
+    background-color: white !important;
+    text-align: left !important;
+    border: 1px solid #d9dce1 !important;
+  }
+  
+  /* Mobile Sticky Button Wrapper */
+  .mobile-calculate-wrapper {
+    display: flex; /* Use flex to center button */
+    justify-content: center;
+    position: fixed !important;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px 10px calc(10px + env(safe-area-inset-bottom)) 10px; /* Padding including safe area */
+    background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent background */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.08);
+    z-index: 100;
+  }
+  
+  /* Sticky Calculate Button - Style adjustments */
+  .mobile-calculate {
+    /* Remove positioning, let wrapper handle it */
+    position: static !important;
+    width: 90% !important; /* Set desired width */
+    max-width: 400px; /* Optional max width */
+    height: 44px !important; 
+    font-size: 1rem !important; 
+    font-weight: 600 !important; 
+    line-height: 44px !important; 
+    padding: 0 !important; 
+    margin: 0 !important; 
+    /* background-color: #1a73e8 !important; Retain color */
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.15); 
+    border-radius: 10px !important; 
+    text-align: center; 
+  }
+  
+  /* Adjust content padding-bottom for wrapper height + safe area */
+  .results-content-wrapper {
+    padding-bottom: calc(44px + 20px + env(safe-area-inset-bottom)) !important; /* button height + wrapper padding + safe area */
+  }
+  
+  /* Hide desktop spacer */
+  .button-container > div[style] {
+    display: none !important;
+  }
+}
+
+/* Floating Label Styles */
+.floating-label-container {
+  position: relative;
+}
+
+.floating-label-container label {
+  position: absolute;
+  left: 10px; /* Match input padding */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem; /* Match input font size */
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: all 0.2s ease-out;
+  background-color: white; /* To cover input border when floated */
+  padding: 0 4px;
+}
+
+.floating-label-container input:focus + label,
+.floating-label-container input:not(:placeholder-shown) + label {
+  top: 0;
+  transform: translateY(-50%) scale(0.8);
+  font-size: 0.75rem; /* Smaller font when floated */
+  color: var(--primary);
+  font-weight: 500;
+}
+
+/* Adjust input padding for floated label */
+.floating-label-container input {
+  padding-top: 10px; /* Make space for label */
+}

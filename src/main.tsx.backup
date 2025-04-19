@@ -1,0 +1,495 @@
+import { useState, FormEvent, ChangeEvent } from 'react';
+import ReactDOM from 'react-dom/client';
+import './App.css';
+import { P_MIN_THRESHOLD } from './lib/sourcing-engine';
+import { SourcingVerdict } from './types';
+import { MOCK_SCENARIOS } from './lib/sourcing-engine';
+
+// Constants
+const STR_THRESHOLD = 0.6; // Threshold for STR calculations
+
+// Define scenario options based on the keys from MOCK_SCENARIOS
+// We still need MOCK_SCENARIOS for the labels in the dropdown temporarily
+const SCENARIO_OPTIONS = Object.keys(MOCK_SCENARIOS).map(key => ({
+  key: key as keyof typeof MOCK_SCENARIOS,
+  // Attempt to get description for label, fallback to key
+  label: MOCK_SCENARIOS[key as keyof typeof MOCK_SCENARIOS]?.description || key
+}));
+
+// Define types for our mock data
+interface Listing {
+  price: number;
+  shipping: number | null;
+  condition?: string;
+  date?: string;
+}
+
+interface Sale {
+  price: number;
+  shipping: number | null;
+  date: string;
+}
+
+// Mock listing data
+const MOCK_USED_LISTINGS: Listing[] = [
+  { price: 18.99, shipping: 4.50, condition: 'Good', date: '2 days' },
+  { price: 19.95, shipping: 3.50, condition: 'Very Good', date: '5 days' },
+  { price: 21.50, shipping: null, condition: 'Like New', date: '1 week' }
+];
+
+const MOCK_NEW_LISTINGS: Listing[] = [
+  { price: 27.99, shipping: null, condition: 'New', date: '3 days' },
+  { price: 29.95, shipping: null, condition: 'New', date: '1 week' }
+];
+
+const MOCK_RECENT_SALES: Sale[] = [
+  { price: 22.50, shipping: null, date: '2023-05-15' },
+  { price: 24.99, shipping: 3.99, date: '2023-04-28' }
+];
+
+type ScenarioKey = typeof SCENARIO_OPTIONS[number]['key'];
+
+function App() {
+  const [isbn, setIsbn] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [searchResult, setSearchResult] = useState<SourcingVerdict | null>(null);
+  const [selectedScenario, setSelectedScenario] = useState<ScenarioKey>('STRONG_EQUILIBRIUM');
+  // New state variables for manual inputs
+  const [lowestActivePrice, setLowestActivePrice] = useState<string>('');
+  const [recentSoldPrice, setRecentSoldPrice] = useState<string>('');
+  const [terapeakSales, setTerapeakSales] = useState<string>('');
+  const [calculationInProgress, setCalculationInProgress] = useState(false);
+
+  const handleSearch = async (e: FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    setSearchResult(null); // Clear previous results on new search
+    
+    try {
+      // --- Call the backend API to fetch book details only --- 
+      const apiUrl = `http://localhost:3001/api/search?isbn=${encodeURIComponent(isbn)}&scenario=${encodeURIComponent(selectedScenario)}`;
+      console.log(`(Frontend) Calling API: ${apiUrl}`);
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        // Try to parse error from backend, or use default
+        let errorMessage = `Error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          // Ignore if response body isn't JSON
+        }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json(); // Parse the JSON response
+      console.log("(Frontend) Backend Response:", result);
+
+      // --- Create an initial result object with book details ---
+      const initialVerdict: SourcingVerdict = {
+        verdict: "REJECT", // Default to reject until manual analysis is done
+        decidingStage: 0,
+        decidingReason: "Awaiting manual data input",
+        buyCost: 8.99, // Default buy cost 
+        sellingPrice: 0,
+        profit: 0,
+        roi: 0,
+        equilibriumDetails: null,
+        terapeakDetails: null,
+        bookDetails: result.bookDetails,
+        manualInputs: {
+          lowestActivePrice: null,
+          recentSoldPrice: null,
+          terapeakSales: null
+        }
+      };
+      
+      setSearchResult(initialVerdict);
+      // Reset manual input fields
+      setLowestActivePrice('');
+      setRecentSoldPrice('');
+      setTerapeakSales('');
+      setCalculationInProgress(false);
+
+    } catch (error) {
+      console.error("(Frontend) API Fetch Error:", error);
+      setError((error as Error).message || 'An unexpected error occurred fetching data');
+      setSearchResult(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScenarioChange = (e: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedScenario(e.target.value as ScenarioKey);
+    // No need to clear search result here, as the backend will use the new scenario on next search
+  };
+
+  const handleScanAgain = () => {
+    setSearchResult(null);
+    setIsbn('');
+  };
+
+  // New function to calculate verdict based on manual inputs
+  const calculateVerdict = () => {
+    if (!searchResult) return;
+    
+    setCalculationInProgress(true);
+    
+    // Parse input values - now these are counts, not prices
+    const activeCount = lowestActivePrice ? parseInt(lowestActivePrice) : null;
+    const soldCount = recentSoldPrice ? parseInt(recentSoldPrice) : null;
+    const terapeak = terapeakSales ? parseInt(terapeakSales) : null;
+    
+    // Initial STR calculation and Terapeak adjustment
+    let str: number | null = null;
+    let adjustedStr: number | null = null;
+    let pTP: number | null = null;
+    
+    // Calculate Terapeak probability if available
+    if (terapeak !== null) {
+      pTP = 1 - Math.exp(-terapeak/6);
+    }
+    
+    // CASE 1: We have both active and sold counts
+    if (activeCount !== null && soldCount !== null && activeCount > 0) {
+      // Pure STR calculation based on counts
+      str = soldCount / activeCount;
+      if (str > 1) str = 1; // Cap at 100%
+      
+      // Adjust with Terapeak if available
+      if (pTP !== null) {
+        adjustedStr = str * pTP;
+      } else {
+        adjustedStr = str;
+      }
+    }
+    // CASE 2: No active/sold data but we have Terapeak
+    else if ((activeCount === 0 || soldCount === 0 || activeCount === null || soldCount === null) && pTP !== null) {
+      // Use Terapeak data directly as our STR estimate
+      str = null; // No direct STR calculation
+      adjustedStr = pTP; // Use Terapeak probability as the adjusted STR
+    }
+    
+    // Stage 1 Decision
+    const passesStage1 = str !== null && str >= STR_THRESHOLD;
+    
+    // Stage 2 Decision
+    const passesStage2 = adjustedStr !== null && adjustedStr >= STR_THRESHOLD;
+    
+    // Determine final verdict
+    let verdict: "BUY" | "REJECT" = "REJECT";
+    let decidingStage = 1;
+    let decidingReason = "";
+    
+    // CASE 1: We have standard STR (actives/solds)
+    if (str !== null) {
+      if (passesStage1) {
+        if (adjustedStr !== null) {
+          if (passesStage2) {
+            verdict = "BUY";
+            decidingStage = 2;
+            decidingReason = `Passes Stage 2: Adjusted STR (${(adjustedStr * 100).toFixed(1)}%) >= threshold (${(STR_THRESHOLD * 100).toFixed(1)}%)`;
+          } else {
+            verdict = "REJECT";
+            decidingStage = 2;
+            decidingReason = `Fails Stage 2: Adjusted STR (${(adjustedStr * 100).toFixed(1)}%) < threshold (${(STR_THRESHOLD * 100).toFixed(1)}%)`;
+          }
+        } else {
+          verdict = "BUY";
+          decidingStage = 1;
+          decidingReason = `Passes Stage 1: STR (${(str * 100).toFixed(1)}%) >= threshold (${(STR_THRESHOLD * 100).toFixed(1)}%)`;
+        }
+      } else {
+        verdict = "REJECT";
+        decidingStage = 1;
+        decidingReason = `Fails Stage 1: STR (${(str * 100).toFixed(1)}%) < threshold (${(STR_THRESHOLD * 100).toFixed(1)}%)`;
+      }
+    }
+    // CASE 2: No standard STR but we have Terapeak
+    else if (adjustedStr !== null) {
+      if (passesStage2) {
+        verdict = "BUY";
+        decidingStage = 2;
+        decidingReason = `Passes based on Terapeak data: (${(adjustedStr * 100).toFixed(1)}%) >= threshold (${(STR_THRESHOLD * 100).toFixed(1)}%)`;
+      } else {
+        verdict = "REJECT";
+        decidingStage = 2;
+        decidingReason = `Fails based on Terapeak data: (${(adjustedStr * 100).toFixed(1)}%) < threshold (${(STR_THRESHOLD * 100).toFixed(1)}%)`;
+      }
+    } else {
+      verdict = "REJECT";
+      decidingStage = 0;
+      decidingReason = "Insufficient data to calculate STR. Please enter either active/sold counts or Terapeak data.";
+    }
+    
+    // Update the manual inputs to reflect counts, not prices
+    const updatedVerdict: SourcingVerdict = {
+      ...searchResult,
+      verdict,
+      decidingStage,
+      decidingReason,
+      equilibriumDetails: str !== null ? {
+        probability: str,
+        threshold: STR_THRESHOLD,
+        passesStage1: passesStage1
+      } : null,
+      terapeakDetails: adjustedStr !== null ? {
+        salesRate: adjustedStr,
+        threshold: STR_THRESHOLD,
+        passesStage2: passesStage2
+      } : null,
+      manualInputs: {
+        lowestActivePrice: activeCount,
+        recentSoldPrice: soldCount,
+        terapeakSales: terapeak
+      }
+    };
+    
+    setSearchResult(updatedVerdict);
+    setCalculationInProgress(false);
+  };
+
+  return (
+    <div className="App">
+      {!searchResult ? (
+        <>
+          <h1>ScanWise</h1>
+          <div className="input-area">
+            <form onSubmit={handleSearch}>
+              <div className="isbn-input-container">
+                <div className="input-group">
+                  <label htmlFor="isbn-input">ISBN:</label>
+                  <input
+                    id="isbn-input"
+                    type="text"
+                    value={isbn}
+                    onChange={(e) => setIsbn(e.target.value)}
+                    placeholder="Enter book ISBN"
+                    required
+                  />
+                </div>
+                
+                <div className="input-group">
+                  <label htmlFor="scenario-select">Test Scenario:</label>
+                  <select
+                    id="scenario-select"
+                    className="scenario-select"
+                    value={selectedScenario}
+                    onChange={handleScenarioChange}
+                  >
+                    {SCENARIO_OPTIONS.map(option => (
+                      <option key={option.key} value={option.key}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <button
+                  type="submit"
+                  className="search-button"
+                  disabled={loading || !isbn.trim()}
+                >
+                  {loading ? 'Searching...' : 'Search'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </>
+      ) : (
+        <div className="results-container">
+          <div className="results-content-wrapper">
+            {/* Verdict Banner */}
+            <div className={`verdict-banner ${searchResult.verdict.toLowerCase()}`}>
+              <div className="verdict-label">{searchResult.verdict}</div>
+              <div>
+                <span>Pure STR: </span>
+                <span className="str-value">{searchResult.equilibriumDetails?.probability 
+                  ? (searchResult.equilibriumDetails.probability * 100).toFixed(1) + '%' 
+                  : 'N/A'}</span>
+              </div>
+              <div>
+                <span>Threshold: </span>
+                <span className="threshold-value">{STR_THRESHOLD * 100}%</span>
+              </div>
+            </div>
+            
+            {/* Key Metrics Banner */}
+            <div className="metrics-banner">
+              <div className="metric">
+                <span>STR</span>
+                <span className="value">{searchResult.equilibriumDetails?.probability ? 
+                  (searchResult.equilibriumDetails.probability * 100).toFixed(1) + '%' : 
+                  'N/A'}
+                </span>
+              </div>
+              <div className="metric">
+                <span>Threshold</span>
+                <span className="value">{STR_THRESHOLD * 100}%</span>
+              </div>
+              <div className="metric">
+                <span>Terapeak</span>
+                <span className="value">{searchResult.terapeakDetails?.salesRate ? 
+                  (searchResult.terapeakDetails.salesRate * 100).toFixed(1) + '%' : 
+                  'N/A'}
+                </span>
+              </div>
+              <div className="metric">
+                <span>Decision</span>
+                <span className="value stage-value">Stage {searchResult.decidingStage}</span>
+              </div>
+            </div>
+            
+            {/* Manual Data Entry Form */}
+            <div className="manual-input-container">
+              <h3>Manual Data Entry</h3>
+              <p className="instructions">Enter active/sold counts OR just Terapeak data to calculate STR</p>
+              
+              <div className="manual-input-section">
+                <div className="input-row">
+                  <button 
+                    className="ebay-link-button"
+                    onClick={() => window.open(`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(isbn)}`, '_blank')}
+                  >
+                    View Active Listings
+                  </button>
+                  <div className="input-field">
+                    <label htmlFor="active-price">Active Listings Count:</label>
+                    <input
+                      id="active-price"
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={lowestActivePrice}
+                      onChange={(e) => setLowestActivePrice(e.target.value)}
+                      placeholder="e.g. 10"
+                    />
+                  </div>
+                </div>
+                
+                <div className="input-row">
+                  <button 
+                    className="ebay-link-button"
+                    onClick={() => window.open(`https://www.ebay.com/sch/i.html?_nkw=${encodeURIComponent(isbn)}&LH_Sold=1&LH_Complete=1`, '_blank')}
+                  >
+                    View Sold Listings
+                  </button>
+                  <div className="input-field">
+                    <label htmlFor="sold-price">Sold Items Count:</label>
+                    <input
+                      id="sold-price"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={recentSoldPrice}
+                      onChange={(e) => setRecentSoldPrice(e.target.value)}
+                      placeholder="e.g. 8"
+                    />
+                  </div>
+                </div>
+                
+                <div className="input-row">
+                  <button 
+                    className="ebay-link-button"
+                    onClick={() => window.open(`https://www.ebay.com/sh/research?marketplace=EBAY-US&keywords=${encodeURIComponent(isbn)}&dayRange=1095`, '_blank')}
+                  >
+                    Check Terapeak
+                  </button>
+                  <div className="input-field">
+                    <label htmlFor="terapeak-sales">3-Year Terapeak Sales: <span className="optional-text">(can be used alone)</span></label>
+                    <input
+                      id="terapeak-sales"
+                      type="number"
+                      min="0"
+                      step="1"
+                      value={terapeakSales}
+                      onChange={(e) => setTerapeakSales(e.target.value)}
+                      placeholder="e.g. 12"
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <button 
+                className="calculate-button"
+                onClick={calculateVerdict}
+                disabled={calculationInProgress}
+              >
+                {calculationInProgress ? 'Calculating...' : 'Calculate STR & Verdict'}
+              </button>
+              
+              {searchResult.decidingReason && (
+                <div className="verdict-reason">
+                  {searchResult.decidingReason}
+                </div>
+              )}
+            </div>
+            
+            {/* Book Info - Use data from searchResult.bookDetails */}
+            <div className="book-info">
+              <div className="book-image">
+                {searchResult.bookDetails?.image ? (
+                  <img src={searchResult.bookDetails.image} alt={searchResult.bookDetails.title || 'Book cover'} style={{ width: '100%', height: '100%', objectFit: 'contain' }}/>
+                ) : (
+                  <span className="scan-label">ISBN</span> 
+                )}
+              </div>
+              <div className="book-details">
+                <div>
+                  <div className="book-title">
+                    {searchResult.bookDetails?.title || 'Title not found'}
+                  </div>
+                  <div className="book-author">
+                    {/* Join authors array if it exists, otherwise show default */}
+                    {searchResult.bookDetails?.authors?.join(', ') || 'Author not found'}
+                  </div>
+                  
+                  {/* Display ISBN instead of Amazon info */}
+                  <div className="book-isbn">
+                    ISBN: {isbn}
+                  </div>
+                </div>
+                <button className="scan-button" onClick={handleScanAgain}>
+                  Scan
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Bottom Toolbar */}
+          <div className="bottom-toolbar">
+            <button className="toolbar-button active">
+              <div className="icon search-icon"></div>
+              <span>Search</span>
+            </button>
+            <button className="toolbar-button">
+              <div className="icon list-icon"></div>
+              <span>List</span>
+            </button>
+            <button className="toolbar-button">
+              <div className="icon ocr-icon"></div>
+              <span>Scan</span>
+            </button>
+            <button className="toolbar-button">
+              <div className="icon history-icon"></div>
+              <span>History</span>
+            </button>
+            <button className="toolbar-button">
+              <div className="icon more-icon"></div>
+              <span>More</span>
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {loading && <div className="loading">Analyzing market data...</div>}
+      {error && <div className="error-message">{error}</div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
