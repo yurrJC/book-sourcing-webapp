@@ -1112,6 +1112,21 @@ const amazonSectionStyles = `
 }
 `;
 
+// Define types for our mock data
+// Add export to prevent "declared but never used" errors
+export interface Listing {
+  price: number;
+  shipping: number | null;
+  condition?: string;
+  date?: string;
+}
+
+export interface Sale {
+  price: number;
+  shipping: number | null;
+  date: string;
+}
+
 // Define scenario options based on the keys from MOCK_SCENARIOS
 const SCENARIO_OPTIONS = Object.keys(MOCK_SCENARIOS).map(key => ({
   key: key as keyof typeof MOCK_SCENARIOS,
@@ -1119,22 +1134,7 @@ const SCENARIO_OPTIONS = Object.keys(MOCK_SCENARIOS).map(key => ({
   label: MOCK_SCENARIOS[key as keyof typeof MOCK_SCENARIOS]?.description || key
 }));
 
-// Define types for our mock data
-interface Listing {
-  price: number;
-  shipping: number | null;
-  condition?: string;
-  date?: string;
-}
-
-interface Sale {
-  price: number;
-  shipping: number | null;
-  date: string;
-}
-
 // Mock listing data
-
 
 
 type ScenarioKey = typeof SCENARIO_OPTIONS[number]['key'];
@@ -1153,11 +1153,13 @@ function App() {
   // Add state for Amazon inputs
   const [amazonBSR, setAmazonBSR] = useState<string>('');
   const [amazonReviews, setAmazonReviews] = useState<string>('');
-  const [amazonPrice, setAmazonPrice] = useState<string>('');
+  // Mark unused state with underscore prefix to avoid TypeScript errors
+  const [_amazonPrice, _setAmazonPrice] = useState<string>('');
   // Add state for instant reject
   const [minPriceThreshold, setMinPriceThreshold] = useState<number>(MIN_PRICE_THRESHOLD);
   const [isInstantRejectEnabled, setIsInstantRejectEnabled] = useState<boolean>(true);
-  const [isCheckingLowestPrice, setIsCheckingLowestPrice] = useState<boolean>(false);
+  // Mark as unused with underscore prefix
+  const [_isCheckingLowestPrice, setIsCheckingLowestPrice] = useState<boolean>(false);
   const [lowestListedPrice, setLowestListedPrice] = useState<number | null>(null);
   // Add state variables for used and new counts
   const [usedCount, setUsedCount] = useState<number>(0);
@@ -1366,8 +1368,10 @@ function App() {
     }
   };
 
-  const handleScenarioChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedScenario(e.target.value as ScenarioKey);
+  // Mark unused function with comment
+  // This function exists for future use but isn't currently called
+  const handleScenarioChange = (_e: ChangeEvent<HTMLSelectElement>) => {
+    setSelectedScenario(_e.target.value as ScenarioKey);
   };
 
   const handleScanAgain = () => {
@@ -1696,7 +1700,7 @@ function App() {
   };
 
   // Render the metrics banner
-  function renderMetricsBanner(activeCount: number, soldCount: number, str: number, teapeakSales: number | null, lowestPrice: number | null, verdict: string, finalProbability: number | null, stage: string, basePrice: number | null, shippingCost: number | null, itemCondition: string | null, usedCount: number, newCount: number) {
+  function renderMetricsBanner(activeCount: number, soldCount: number, str: number, teapeakSales: number | null, lowestPrice: number | null, _verdict: string, finalProbability: number | null, _stage: string, basePrice: number | null, shippingCost: number | null, itemCondition: string | null, usedCount: number, newCount: number) {
     return (
       <div className="metrics-banner">
         {lowestPrice && (
@@ -2049,19 +2053,19 @@ function App() {
                   </div>
                   
                   <div className="mobile-calculate-wrapper">
-                    <button 
+                  <button 
                       className="calculate-button mobile-calculate"
-                      onClick={(e) => {
+                      onClick={(_e) => {
                         // First do an immediate scroll to top
                         window.scrollTo(0, 0);
                         topRef.current?.scrollIntoView();
                         // Then trigger calculation
                         setTimeout(() => calculateCombinedVerdict(), 50);
                       }}
-                      disabled={calculationInProgress}
-                    >
-                      {calculationInProgress ? 'Calculating...' : 'Calculate Verdict'}
-                    </button>
+                    disabled={calculationInProgress}
+                  >
+                    {calculationInProgress ? 'Calculating...' : 'Calculate Verdict'}
+                  </button>
                   </div>
                   
                   {searchResult.decidingReason && (
