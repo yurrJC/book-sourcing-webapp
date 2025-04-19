@@ -40,3 +40,13 @@ dist-ssr
 .env.production.local
 */**.env
 server/.env
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Render config (keep secure info out of git)
+.env.render

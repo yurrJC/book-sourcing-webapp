@@ -1222,7 +1222,9 @@ function App() {
       
       try {
         // Make API call to our backend server on port 3001
-        const response = await fetch(`http://localhost:3001/api/ebay/search?title=${encodeURIComponent(bookTitle)}&author=${encodeURIComponent(author)}`);
+        const apiUrl = `${import.meta.env.VITE_API_URL}/api/ebay/search?title=${encodeURIComponent(bookTitle)}&author=${encodeURIComponent(author)}`;
+        console.log(`(Frontend) Calling API: ${apiUrl}`);
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
@@ -1297,7 +1299,8 @@ function App() {
     
     try {
       // --- Call the backend API to fetch book details only --- 
-      const apiUrl = `http://localhost:3001/api/search?isbn=${encodeURIComponent(isbn)}&scenario=${encodeURIComponent(selectedScenario)}`;
+      // Use the environment variable for the API URL
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/search?isbn=${encodeURIComponent(isbn)}&scenario=${encodeURIComponent(selectedScenario)}`;
       console.log(`(Frontend) Calling API: ${apiUrl}`);
       const response = await fetch(apiUrl);
 
@@ -1377,7 +1380,18 @@ function App() {
 
     } catch (error) {
       console.error("(Frontend) API Fetch Error:", error);
-      setError((error as Error).message || 'An unexpected error occurred fetching data');
+      let errorMessage = (error as Error).message || 'An unexpected error occurred fetching data';
+      
+      // Check if this might be a network connectivity issue
+      if (
+        errorMessage.includes('Failed to fetch') || 
+        errorMessage.includes('NetworkError') || 
+        errorMessage.includes('Network request failed')
+      ) {
+        errorMessage = 'Network error: Please check your internet connection and try again.';
+      }
+      
+      setError(errorMessage);
       setSearchResult(null);
     } finally {
       setLoading(false);

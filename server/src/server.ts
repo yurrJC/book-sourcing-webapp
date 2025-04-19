@@ -12,8 +12,15 @@ import ebayRoutes from './routes/ebay'; // Import eBay routes
 const app = express();
 const port = process.env.PORT || 3001; // Use port 3001 for the backend
 
-// Middleware
-app.use(cors()); // Allow requests from your frontend dev server
+// Configure CORS
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://book-sourcing-frontend.onrender.com', 'https://book-sourcing-api.onrender.com']
+    : 'http://localhost:5173', // Vite's default dev server
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json()); // Parse JSON request bodies
 
 // Register routes

@@ -39,4 +39,14 @@ export default defineConfig({
             }
         })
     ],
+    server: {
+        proxy: {
+            // Proxy API requests to the backend server in development
+            '/api': {
+                target: 'http://localhost:3001',
+                changeOrigin: true,
+                secure: false
+            }
+        }
+    }
 });
