@@ -55,7 +55,7 @@ const amazonSectionStyles = `
   text-align: center;
   margin-bottom: 2rem;
   padding: 2rem 0;
-  background: #f0f0f0; /* Changed from gradient to grey */
+  background: #333333; /* Dark charcoal grey */
   color: white;
   border-radius: 0 0 16px 16px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
@@ -85,6 +85,17 @@ const amazonSectionStyles = `
   height: 140px;
   border-radius: 50%;
   z-index: 0;
+}
+
+.scanwise-header h1 {
+  margin: 0;
+  font-size: 2.8rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  color: white;
 }
 
 .scanwise-header .logo-container {
@@ -1765,9 +1776,7 @@ function App() {
       {!searchResult ? (
         <div className="content-area">
           <div className="scanwise-header">
-            <div className="logo-container">
-              <img src="/images/scanwise-logo.png" alt="ScanWise Logo" className="logo" />
-            </div>
+            <h1>ScanWise</h1>
           </div>
           <div className="input-area">
             <form onSubmit={handleSearch}>
