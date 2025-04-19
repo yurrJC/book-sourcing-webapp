@@ -1,0 +1,17 @@
+{
+  "name": "Book Sourcing Web App",
+  "short_name": "Book Sourcer",
+  "description": "A web app for sourcing and evaluating books for resale",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3498db",
+  "icons": [
+    {
+      "src": "/images/scanwise-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+} 
