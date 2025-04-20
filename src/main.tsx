@@ -1184,6 +1184,10 @@ function App() {
   const [recentSoldPrice, setRecentSoldPrice] = useState<string>('');
   const [terapeakSales, setTerapeakSales] = useState<string>('');
   const [calculationInProgress, setCalculationInProgress] = useState(false);
+  // Add ref for ISBN input field
+  const isbnInputRef = useRef<HTMLInputElement>(null);
+  // Add state to track if we've shown the results screen
+  const [hasViewedResults, setHasViewedResults] = useState(false);
   // Add state for Amazon inputs
   const [amazonBSR, setAmazonBSR] = useState<string>('');
   const [amazonReviews, setAmazonReviews] = useState<string>('');
@@ -1803,6 +1807,23 @@ function App() {
     );
   }
 
+  // Add effect to focus on ISBN input when returning to main screen
+  useEffect(() => {
+    // Only auto-focus if we've previously shown results
+    // This prevents focusing on initial load
+    if (!searchResult && hasViewedResults && isbnInputRef.current) {
+      // Short delay to ensure the input is rendered
+      setTimeout(() => {
+        isbnInputRef.current?.focus();
+      }, 100);
+    }
+    
+    // Update tracking state
+    if (searchResult && !hasViewedResults) {
+      setHasViewedResults(true);
+    }
+  }, [searchResult, hasViewedResults]);
+
   return (
     <div className="App app-container">
       {!searchResult ? (
@@ -1822,6 +1843,8 @@ function App() {
                     onChange={(e) => setIsbn(e.target.value)}
                     placeholder="Enter book ISBN"
                     required
+                    ref={isbnInputRef} // Add the ref here
+                    autoFocus={!hasViewedResults} // Only auto-focus on initial load
                   />
                 </div>
                 
