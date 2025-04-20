@@ -1286,6 +1286,34 @@ function App() {
     }
   };
 
+  // Function to force the keyboard to show
+  const showKeyboard = (inputId: string) => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      // Force blur and refocus to trigger keyboard on mobile
+      input.blur();
+      // Small delay before focus
+      setTimeout(() => {
+        input.focus();
+        input.click();
+      }, 50);
+    }
+  };
+
+  // Function to toggle keyboard visibility (for the toggle button)
+  const toggleKeyboard = () => {
+    setKeyboardVisible(!keyboardVisible);
+    if (!keyboardVisible) {
+      // If we're showing the keyboard, focus on the first input
+      showKeyboard('active-price');
+    } else {
+      // If we're hiding the keyboard, blur any focused element
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+  };
+
   // Scroll to top when search results appear OR calculation finishes
   useEffect(() => {
     // Check if we have results AND calculation is NOT in progress
