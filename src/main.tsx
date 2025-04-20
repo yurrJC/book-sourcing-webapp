@@ -1155,6 +1155,24 @@ const SCENARIO_OPTIONS = Object.keys(MOCK_SCENARIOS).map(key => ({
 
 type ScenarioKey = typeof SCENARIO_OPTIONS[number]['key'];
 
+// Add this helper function near the top of the file with other utility functions
+const safeOpenExternalLink = (url: string) => {
+  // This pattern forces links to open in system browser or app
+  // instead of in the PWA's in-app browser view
+  const isIOSStandalone = 'standalone' in window.navigator && (window.navigator as any).standalone;
+  if (isIOSStandalone || window.matchMedia('(display-mode: standalone)').matches) {
+    // If in standalone mode (PWA installed)
+    window.location.href = url;
+    // Prevent blank screen on return by forcing reload after a delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
+  } else {
+    // Regular browser mode - open in new tab
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+};
+
 function App() {
   const [isbn, setIsbn] = useState('');
   const [loading, setLoading] = useState(false);
@@ -1944,7 +1962,7 @@ function App() {
                               ? searchResult.bookDetails.authors[0] 
                               : '';
                             const searchTerm = `${mainTitle} ${author}`.trim();
-                            window.open(`https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&_sacat=0&_from=R40&LH_ItemCondition=4&rt=nc&LH_PrefLoc=1`, '_blank');
+                            safeOpenExternalLink(`https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&_sacat=0&_from=R40&rt=nc&LH_PrefLoc=1`);
                           }}
                         >
                           View Active
@@ -1978,7 +1996,7 @@ function App() {
                               ? searchResult.bookDetails.authors[0] 
                               : '';
                             const searchTerm = `${mainTitle} ${author}`.trim();
-                            window.open(`https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&_sacat=0&_from=R40&LH_Sold=1&LH_Complete=1&rt=nc&LH_PrefLoc=1`, '_blank');
+                            safeOpenExternalLink(`https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&_sacat=0&_from=R40&LH_Sold=1&LH_Complete=1&rt=nc&LH_PrefLoc=1`);
                           }}
                         >
                           View Sold
@@ -2017,7 +2035,7 @@ function App() {
                             const endDate = new Date().getTime();
                             const startDate = endDate - (1095 * 24 * 60 * 60 * 1000); // 1095 days in milliseconds
                             
-                            window.open(`https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${encodeURIComponent(searchTerm)}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&tabName=SOLD&tz=Australia%2FMelbourne`, '_blank');
+                            safeOpenExternalLink(`https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${encodeURIComponent(searchTerm)}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&tabName=SOLD&tz=Australia%2FMelbourne`);
                           }}
                         >
                           Check Terapeak
@@ -2061,7 +2079,7 @@ function App() {
                       <div className="button-container">
                         <button 
                           className="amazon-link-button mobile-button"
-                          onClick={() => window.open(`https://www.amazon.com/s?k=${encodeURIComponent(isbn)}`, '_blank')}
+                          onClick={() => safeOpenExternalLink(`https://www.amazon.com.au/s?k=${encodeURIComponent(isbn)}`)}
                         >
                           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/2560px-Amazon_logo.svg.png" alt="Amazon" className="amazon-logo" />
                         </button>
