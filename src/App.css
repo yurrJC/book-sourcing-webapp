@@ -119,6 +119,41 @@ input, select {
   border-radius: var(--radius);
   font-size: 1rem;
   width: 100%;
+  /* Mobile-specific fixes to prevent auto-zoom */
+  font-size: 16px;
+  touch-action: manipulation;
+  max-height: 100%;
+}
+
+/* Specific mobile styles for number inputs to prevent zoom */
+input[type="number"] {
+  font-size: 16px; /* Prevent zoom on iOS */
+}
+
+/* Fix to prevent zooming on focus for iOS devices */
+@media screen and (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px; /* iOS won't zoom if font size is at least 16px */
+  }
+  
+  .input-field input {
+    font-size: 16px;
+  }
+  
+  .floating-label-container input {
+    font-size: 16px;
+  }
+  
+  /* Ensure text doesn't appear too small after preventing zoom */
+  .mobile-field label {
+    font-size: 14px;
+    margin-bottom: 4px;
+  }
+  
+  /* Better touch targets for mobile */
+  .button-container button {
+    min-height: 44px; /* Apple's recommended minimum touch target size */
+  }
 }
 
 input:focus, select:focus {

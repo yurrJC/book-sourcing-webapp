@@ -6,6 +6,7 @@ const urlsToCache = [
   '/src/main.tsx',
   '/images/scanwise-logo.png',
   '/manifest.json',
+  '/mobile-fixes.css',
   // Add other assets that should be available offline
 ];
 

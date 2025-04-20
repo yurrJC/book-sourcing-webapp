@@ -3,12 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#3498db" />
     <meta name="description" content="Book sourcing and evaluation web app" />
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/images/scanwise-logo.png" />
+    <link rel="stylesheet" href="/mobile-fixes.css" />
     <title>Book Sourcing App</title>
+    <style>
+      /* Prevent font-size adjustment on orientation change and input focus */
+      html {
+        -webkit-text-size-adjust: 100%;
+      }
+      
+      /* Additional fixes for iOS/mobile input fields */
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        font-size: 16px; /* Inputs with font-size >= 16px won't zoom on iOS */
+        max-height: 100%;
+      }
+      
+      /* Ensure proper input sizing on all devices */
+      input, 
+      select, 
+      button {
+        touch-action: manipulation; /* Prevents double-tap to zoom */
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,55 @@
+/* Mobile fixes to prevent unwanted zooming behavior on input fields */
+
+/* Prevent font scaling in landscape */
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Set base font size large enough to prevent zooming */
+body {
+  font-size: 16px;
+}
+
+/* Ensure all form elements have sufficient size to prevent zoom */
+input,
+select,
+textarea,
+button {
+  font-size: 16px !important; /* Minimum font size to prevent zoom on iOS */
+  max-height: 100%;
+  touch-action: manipulation;
+}
+
+/* Specific fixes for number inputs which are commonly problematic */
+input[type="number"] {
+  font-size: 16px !important;
+}
+
+/* Ensure iOS doesn't try to "help" by zooming */
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="number"],
+input[type="password"] {
+  appearance: none;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+/* Special handling for floating labels */
+.floating-label-container input,
+.mobile-field input {
+  font-size: 16px !important;
+}
+
+/* Improved touch targets on mobile */
+.button-container button,
+button.mobile-button {
+  min-height: 44px;
+}
+
+/* Prevent double-tap zoom on buttons and links */
+a, 
+button {
+  touch-action: manipulation;
+} 
