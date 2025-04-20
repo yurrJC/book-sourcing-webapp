@@ -1215,7 +1215,7 @@ function App() {
   // Mark unused state with underscore prefix to avoid TypeScript errors
   const [_amazonPrice, _setAmazonPrice] = useState<string>('');
   // Add state for instant reject
-  const [minPriceThreshold, setMinPriceThreshold] = useState<number>(MIN_PRICE_THRESHOLD);
+  const [minPriceThreshold, setMinPriceThreshold] = useState<string>(MIN_PRICE_THRESHOLD.toString());
   const [isInstantRejectEnabled, setIsInstantRejectEnabled] = useState<boolean>(true);
   // Mark as unused with underscore prefix
   const [_isCheckingLowestPrice, setIsCheckingLowestPrice] = useState<boolean>(false);
@@ -1231,6 +1231,8 @@ function App() {
   const topRef = useRef<HTMLDivElement>(null);
   // Add state to track currently focused input
   const [activeInput, setActiveInput] = useState<string | null>(null);
+  // Add state for front page keyboard
+  const [frontPageKeyboardVisible, setFrontPageKeyboardVisible] = useState<boolean>(false);
 
   // Function to handle numeric keypad button presses
   const handleNumericInput = (value: string) => {
@@ -1247,6 +1249,12 @@ function App() {
       setAmazonBSR(prev => prev + value);
     } else if (activeInput === 'amazon-reviews') {
       setAmazonReviews(prev => prev + value);
+    } else if (activeInput === 'min-price-threshold') {
+      // Handle decimal point specially for price input
+      if (value === '.' && minPriceThreshold.includes('.')) {
+        return; // Don't allow multiple decimal points
+      }
+      setMinPriceThreshold(prev => prev + value);
     }
   };
 
@@ -1265,6 +1273,8 @@ function App() {
       setAmazonBSR(prev => prev.slice(0, -1));
     } else if (activeInput === 'amazon-reviews') {
       setAmazonReviews(prev => prev.slice(0, -1));
+    } else if (activeInput === 'min-price-threshold') {
+      setMinPriceThreshold(prev => prev.slice(0, -1));
     }
   };
 
@@ -1283,7 +1293,32 @@ function App() {
       setAmazonBSR('');
     } else if (activeInput === 'amazon-reviews') {
       setAmazonReviews('');
+    } else if (activeInput === 'min-price-threshold') {
+      setMinPriceThreshold('');
     }
+  };
+
+  // Function to add decimal point
+  const handleDecimalPoint = () => {
+    if (!activeInput || activeInput !== 'min-price-threshold') return;
+    
+    // Only add decimal if it doesn't already exist
+    if (!minPriceThreshold.includes('.')) {
+      // If empty, add 0 before decimal
+      if (minPriceThreshold === '') {
+        setMinPriceThreshold('0.');
+      } else {
+        setMinPriceThreshold(prev => prev + '.');
+      }
+    }
+  };
+
+  // Convert string to number for validation and searches
+  const getNumericThreshold = (): number => {
+    if (minPriceThreshold === '' || isNaN(parseFloat(minPriceThreshold))) {
+      return MIN_PRICE_THRESHOLD;
+    }
+    return parseFloat(minPriceThreshold);
   };
 
   // Scroll to top when search results appear OR calculation finishes
@@ -1460,17 +1495,17 @@ function App() {
           const lowestPrice = await checkEbayLowestPrice(isbn, title, author);
           
           // If price is below threshold, update verdict with instant reject
-          if (lowestPrice !== null && lowestPrice < minPriceThreshold) {
+          if (lowestPrice !== null && lowestPrice < getNumericThreshold()) {
             const updatedVerdict: SourcingVerdict = {
               ...initialVerdict,
               verdict: "REJECT",
               decidingStage: -1, // Special stage for instant reject
-              decidingReason: `INSTANT REJECT: Lowest price on eBay AU is $${lowestPrice.toFixed(2)}, which is below your threshold of $${minPriceThreshold.toFixed(2)}.`
+              decidingReason: `INSTANT REJECT: Lowest price on eBay AU is $${lowestPrice.toFixed(2)}, which is below your threshold of $${getNumericThreshold().toFixed(2)}.`
             };
             
             setSearchResult(updatedVerdict);
           } else if (lowestPrice !== null) {
-            console.log(`Book passes price threshold check: $${lowestPrice.toFixed(2)} >= $${minPriceThreshold.toFixed(2)}`);
+            console.log(`Book passes price threshold check: $${lowestPrice.toFixed(2)} >= $${getNumericThreshold().toFixed(2)}`);
           }
         } else {
           console.warn('Missing title or author for eBay price check');
@@ -1962,13 +1997,18 @@ function App() {
                       <span className="currency-symbol">$</span>
                       <input
                         id="min-price-threshold"
-                        type="number"
-                        step="0.01"
-                        min="0"
+                        type="text"
                         value={minPriceThreshold}
-                        onChange={(e) => setMinPriceThreshold(Number(e.target.value))}
+                        onChange={(e) => setMinPriceThreshold(e.target.value)}
                         className="price-input"
                         disabled={!isInstantRejectEnabled}
+                        readOnly={isInstantRejectEnabled}
+                        onFocus={() => {
+                          if (isInstantRejectEnabled) {
+                            setActiveInput('min-price-threshold');
+                            setFrontPageKeyboardVisible(true);
+                          }
+                        }}
                       />
                     </div>
                     <div className="price-helper-text">
@@ -1976,6 +2016,142 @@ function App() {
                     </div>
                   </div>
                 </div>
+                
+                {/* Front page numeric keypad - Only shown when price input is focused */}
+                {frontPageKeyboardVisible && isInstantRejectEnabled && (
+                  <div style={{
+                    margin: '10px 0',
+                    padding: '10px',
+                    backgroundColor: '#f8f9fa',
+                    borderRadius: '8px',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+                    border: '1px solid #e8eaed'
+                  }}>
+                    <div style={{ 
+                      marginBottom: '4px', 
+                      fontSize: '13px', 
+                      fontWeight: '500', 
+                      color: '#5f6368',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span>Set Price Threshold: ${minPriceThreshold}</span>
+                    </div>
+                    
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, 1fr)',
+                      gap: '4px',
+                      marginBottom: '4px'
+                    }}>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, '.', 0].map((num) => (
+                        <button 
+                          key={num}
+                          onClick={() => num === '.' ? handleDecimalPoint() : handleNumericInput(num.toString())}
+                          style={{
+                            padding: '8px 0',
+                            backgroundColor: '#fff',
+                            border: '1px solid #dadce0',
+                            borderRadius: '4px',
+                            fontSize: '15px',
+                            fontWeight: '500',
+                            color: '#202124',
+                            cursor: 'pointer',
+                            touchAction: 'manipulation',
+                            userSelect: 'none',
+                            WebkitTapHighlightColor: 'transparent',
+                            height: '36px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                    </div>
+                    
+                    <div style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '4px'
+                    }}>
+                      <button 
+                        onClick={handleBackspace}
+                        style={{
+                          padding: '6px 0',
+                          backgroundColor: '#f1f3f4',
+                          border: '1px solid #dadce0',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          color: '#5f6368',
+                          cursor: 'pointer',
+                          touchAction: 'manipulation',
+                          userSelect: 'none',
+                          WebkitTapHighlightColor: 'transparent',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        ← Backspace
+                      </button>
+                      <button 
+                        onClick={handleClear}
+                        style={{
+                          padding: '6px 0',
+                          backgroundColor: '#fef7f6',
+                          border: '1px solid #fadad9',
+                          borderRadius: '4px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          color: '#d93025',
+                          cursor: 'pointer',
+                          touchAction: 'manipulation',
+                          userSelect: 'none',
+                          WebkitTapHighlightColor: 'transparent',
+                          height: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        setFrontPageKeyboardVisible(false);
+                        setActiveInput(null);
+                      }}
+                      style={{
+                        width: '100%',
+                        marginTop: '8px',
+                        padding: '6px 0',
+                        backgroundColor: '#e8f0fe',
+                        border: '1px solid #dadce0',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        fontWeight: '500',
+                        color: '#1967d2',
+                        cursor: 'pointer',
+                        touchAction: 'manipulation',
+                        userSelect: 'none',
+                        WebkitTapHighlightColor: 'transparent',
+                        height: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      Done
+                    </button>
+                  </div>
+                )}
                 
                 <button
                   type="submit"
