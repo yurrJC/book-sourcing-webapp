@@ -1962,7 +1962,7 @@ function App() {
                               ? searchResult.bookDetails.authors[0] 
                               : '';
                             const searchTerm = `${mainTitle} ${author}`.trim();
-                            safeOpenExternalLink(`https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&_sacat=0&_from=R40&rt=nc&LH_PrefLoc=1`);
+                            safeOpenExternalLink(`https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchTerm)}&_sacat=0&_from=R40&rt=nc&LH_PrefLoc=1&_sop=15`);
                           }}
                         >
                           View Active
