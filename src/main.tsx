@@ -1229,6 +1229,36 @@ function App() {
   // Add state variable for item condition
   const [itemCondition, setItemCondition] = useState<string | null>(null);
   const topRef = useRef<HTMLDivElement>(null);
+  // Add state for keyboard visibility
+  const [keyboardVisible, setKeyboardVisible] = useState<boolean>(false);
+
+  // Function to force the keyboard to show
+  const showKeyboard = (inputId: string) => {
+    const input = document.getElementById(inputId) as HTMLInputElement;
+    if (input) {
+      // Force blur and refocus to trigger keyboard on mobile
+      input.blur();
+      // Small delay before focus
+      setTimeout(() => {
+        input.focus();
+        input.click();
+      }, 50);
+    }
+  };
+
+  // Function to toggle keyboard visibility (for the toggle button)
+  const toggleKeyboard = () => {
+    setKeyboardVisible(!keyboardVisible);
+    if (!keyboardVisible) {
+      // If we're showing the keyboard, focus on the first input
+      showKeyboard('active-price');
+    } else {
+      // If we're hiding the keyboard, blur any focused element
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur();
+      }
+    }
+  };
 
   // Scroll to top when search results appear OR calculation finishes
   useEffect(() => {
@@ -1881,6 +1911,7 @@ function App() {
                     required
                     ref={isbnInputRef} // Add the ref here
                     autoFocus={!hasViewedResults} // Only auto-focus on initial load
+                    inputMode="none" // Prevent keyboard from showing for scanner
                   />
                 </div>
                 
@@ -2038,6 +2069,8 @@ function App() {
                           onChange={(e) => setLowestActivePrice(e.target.value)}
                           placeholder=" "
                           className="mobile-input"
+                          inputMode="numeric" // Force numeric keyboard for mobile
+                          onFocus={() => setKeyboardVisible(true)}
                         />
                         <label htmlFor="active-price">Active Listings Count:</label>
                       </div>
@@ -2073,6 +2106,8 @@ function App() {
                           onChange={(e) => setRecentSoldPrice(e.target.value)}
                           placeholder=" "
                           className="mobile-input"
+                          inputMode="numeric" // Force numeric keyboard for mobile
+                          onFocus={() => setKeyboardVisible(true)}
                         />
                         <label htmlFor="sold-price">Sold Items Count:</label>
                       </div>
@@ -2113,6 +2148,8 @@ function App() {
                           onChange={(e) => setTerapeakSales(e.target.value)}
                           placeholder=" "
                           className="mobile-input"
+                          inputMode="numeric" // Force numeric keyboard for mobile
+                          onFocus={() => setKeyboardVisible(true)}
                         />
                         <label htmlFor="terapeak-sales">3-Year Terapeak Sales: <span className="optional-text">(can be used alone)</span></label>
                       </div>
@@ -2132,6 +2169,8 @@ function App() {
                           onChange={(e) => setAmazonBSR(e.target.value)}
                           placeholder=" "
                           className="mobile-input"
+                          inputMode="numeric" // Force numeric keyboard for mobile
+                          onFocus={() => setKeyboardVisible(true)}
                         />
                         <label htmlFor="amazon-bsr">Amazon BSR: <span className="optional-text">(optional stage 3)</span></label>
                       </div>
@@ -2159,6 +2198,8 @@ function App() {
                           onChange={(e) => setAmazonReviews(e.target.value)}
                           placeholder=" "
                           className="mobile-input"
+                          inputMode="numeric" // Force numeric keyboard for mobile
+                          onFocus={() => setKeyboardVisible(true)}
                         />
                         <label htmlFor="amazon-reviews">Amazon Review Count: <span className="optional-text">(optional stage 3)</span></label>
                       </div>
@@ -2166,7 +2207,7 @@ function App() {
                   </div>
                   
                   <div className="mobile-calculate-wrapper">
-                  <button 
+                    <button 
                       className="calculate-button mobile-calculate"
                       onClick={(_e) => {
                         // First do an immediate scroll to top
@@ -2175,10 +2216,30 @@ function App() {
                         // Then trigger calculation
                         setTimeout(() => calculateCombinedVerdict(), 50);
                       }}
-                    disabled={calculationInProgress}
-                  >
-                    {calculationInProgress ? 'Calculating...' : 'Calculate Verdict'}
-                  </button>
+                      disabled={calculationInProgress}
+                    >
+                      {calculationInProgress ? 'Calculating...' : 'Calculate Verdict'}
+                    </button>
+                    
+                    <button 
+                      className="keyboard-toggle-button"
+                      onClick={toggleKeyboard}
+                      style={{
+                        marginTop: '15px',
+                        padding: '10px',
+                        background: keyboardVisible ? '#e8eaed' : '#f1f3f4',
+                        border: '1px solid #dadce0',
+                        borderRadius: '6px',
+                        fontSize: '14px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        width: '100%'
+                      }}
+                    >
+                      {keyboardVisible ? 'Hide Keyboard' : 'Show Keyboard'}
+                    </button>
                   </div>
                   
                   {searchResult.decidingReason && (
