@@ -1157,18 +1157,108 @@ type ScenarioKey = typeof SCENARIO_OPTIONS[number]['key'];
 
 // Add this helper function near the top of the file with other utility functions
 const safeOpenExternalLink = (url: string) => {
-  // Using a consistent approach for all platforms that preserves app state
-  try {
-    // For most browsers and PWA contexts, this preserves the current state
-    // while opening the link in a separate context
-    window.open(url, '_blank', 'noopener,noreferrer');
-  } catch (error) {
-    // Fallback method if window.open fails
-    const link = document.createElement('a');
-    link.href = url;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
-    link.click();
+  // Check if the app is running in PWA mode
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                (navigator as any).standalone === true;
+  
+  if (isPWA) {
+    // Create an iframe element that we'll hide
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    
+    // Create a modal overlay with launch button
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+    overlay.style.zIndex = '9999';
+    overlay.style.display = 'flex';
+    overlay.style.flexDirection = 'column';
+    overlay.style.justifyContent = 'center';
+    overlay.style.alignItems = 'center';
+    overlay.style.color = 'white';
+    overlay.style.textAlign = 'center';
+    overlay.style.padding = '20px';
+    
+    // Create container
+    const container = document.createElement('div');
+    container.style.maxWidth = '300px';
+    container.style.marginBottom = '20px';
+    
+    // Create heading
+    const heading = document.createElement('h3');
+    heading.textContent = 'External Link';
+    heading.style.marginBottom = '20px';
+    
+    // Create instructions
+    const instructions = document.createElement('p');
+    instructions.textContent = 'Tap the button below to open in your browser. Then tap outside this box to return to the app.';
+    instructions.style.marginBottom = '30px';
+    
+    // Create link button
+    const button = document.createElement('button');
+    button.textContent = 'Open Link';
+    button.style.backgroundColor = '#3a86ff';
+    button.style.color = 'white';
+    button.style.padding = '12px 24px';
+    button.style.borderRadius = '8px';
+    button.style.border = 'none';
+    button.style.fontWeight = 'bold';
+    button.style.fontSize = '16px';
+    button.style.cursor = 'pointer';
+    
+    // Handle click on the button - specific iOS PWA handling
+    button.addEventListener('click', () => {
+      // First remove the modal to let user know we're doing something
+      document.body.removeChild(overlay);
+      
+      // Special handling for iOS browsers in PWA mode
+      if (iframe && iframe.contentWindow) {
+        // Use the iframe trick to avoid white screen on iOS
+        iframe.onload = () => {
+          // Once iframe is loaded, open the URL in a new tab
+          window.open(url, '_blank');
+        };
+        iframe.src = url;
+      } else {
+        // Fallback if iframe approach fails
+        window.open(url, '_blank');
+      }
+      
+      // Clean up the iframe after a delay
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 1000);
+    });
+    
+    // Assemble elements
+    container.appendChild(heading);
+    container.appendChild(instructions);
+    container.appendChild(button);
+    overlay.appendChild(container);
+    
+    // Add to document
+    document.body.appendChild(overlay);
+    
+    // Close when clicked outside the button
+    overlay.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement) !== button) {
+        document.body.removeChild(overlay);
+        // Clean up the iframe
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }
+    });
+  } else {
+    // Not in PWA mode, just use normal window.open
+    window.open(url, '_blank');
   }
 };
 
@@ -1446,6 +1536,8 @@ function App() {
     let str: number | null = null;
     let adjustedStr: number | null = null;
     let pTP: number | null = null;
+    let terapeakWeight: number = 0;
+    let marketWeight: number = 0;
     
     // Calculate Terapeak probability if available
     if (terapeak !== null) {
@@ -1473,8 +1565,8 @@ function App() {
       
       // Calculate weights with dynamic confidence
       const totalMarketData = activeCount + soldCount;
-      const terapeakWeight = baseConfidence / (baseConfidence + totalMarketData);
-      const marketWeight = totalMarketData / (baseConfidence + totalMarketData);
+      terapeakWeight = baseConfidence / (baseConfidence + totalMarketData);
+      marketWeight = totalMarketData / (baseConfidence + totalMarketData);
       console.log(`Terapeak weight: ${(terapeakWeight * 100).toFixed(1)}%, Market weight: ${(marketWeight * 100).toFixed(1)}%`);
       
       // Adjust market STR with smoothing for small sample sizes
@@ -1523,8 +1615,8 @@ function App() {
     else if (activeCount !== null && activeCount > 0 && (soldCount === null || soldCount === 0) && pTP !== null) {
       // Use Bayesian approach for this case
       const baseConfidence = 7;
-      const terapeakWeight = baseConfidence / (baseConfidence + activeCount);
-      const marketWeight = activeCount / (baseConfidence + activeCount);
+      terapeakWeight = baseConfidence / (baseConfidence + activeCount);
+      marketWeight = activeCount / (baseConfidence + activeCount);
       
       // For zero solds, use a confidence-adjusted STR
       const confidenceAdjustment = 1;
