@@ -2058,37 +2058,65 @@ function App() {
               newCount
             )}
             
-            {/* Numeric Keypad UI */}
+            {/* Numeric Keypad UI - More compact and mobile-friendly */}
             <div style={{
-              margin: '10px 0 15px',
-              padding: '15px',
+              margin: '5px 0 10px',
+              padding: '10px',
               backgroundColor: '#f8f9fa',
               borderRadius: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              boxShadow: '0 1px 2px rgba(0,0,0,0.08)',
+              border: '1px solid #e8eaed'
             }}>
-              <div style={{ marginBottom: '5px', fontSize: '15px', fontWeight: 'bold', color: '#444' }}>
-                Custom Keypad {activeInput ? `- Editing: ${activeInput.replace('-', ' ').toUpperCase()}` : ''}
+              <div style={{ 
+                marginBottom: '4px', 
+                fontSize: '13px', 
+                fontWeight: '500', 
+                color: '#5f6368',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>Numeric Keypad</span>
+                {activeInput && (
+                  <span style={{ 
+                    fontSize: '12px', 
+                    backgroundColor: '#e8f0fe', 
+                    color: '#1967d2',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontWeight: 'normal'
+                  }}>
+                    {activeInput.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </span>
+                )}
               </div>
               
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(5, 1fr)',
-                gap: '8px',
-                marginBottom: '8px'
+                gap: '4px',
+                marginBottom: '4px'
               }}>
                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map((num) => (
                   <button 
                     key={num}
                     onClick={() => handleNumericInput(num.toString())}
                     style={{
-                      padding: '12px 0',
+                      padding: '8px 0',
                       backgroundColor: '#fff',
                       border: '1px solid #dadce0',
                       borderRadius: '4px',
-                      fontSize: '18px',
-                      fontWeight: 'bold',
-                      color: '#444',
-                      cursor: 'pointer'
+                      fontSize: '15px',
+                      fontWeight: '500',
+                      color: '#202124',
+                      cursor: 'pointer',
+                      touchAction: 'manipulation',
+                      userSelect: 'none',
+                      WebkitTapHighlightColor: 'transparent',
+                      height: '36px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
                     }}
                     disabled={!activeInput}
                   >
@@ -2100,35 +2128,49 @@ function App() {
               <div style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                gap: '8px'
+                gap: '4px'
               }}>
                 <button 
                   onClick={handleBackspace}
                   style={{
-                    padding: '10px 0',
+                    padding: '6px 0',
                     backgroundColor: '#f1f3f4',
                     border: '1px solid #dadce0',
                     borderRadius: '4px',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                    color: '#444',
-                    cursor: 'pointer'
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    color: '#5f6368',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation',
+                    userSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   disabled={!activeInput}
                 >
-                  Backspace
+                  ← Backspace
                 </button>
                 <button 
                   onClick={handleClear}
                   style={{
-                    padding: '10px 0',
-                    backgroundColor: '#fce8e6',
-                    border: '1px solid #dadce0',
+                    padding: '6px 0',
+                    backgroundColor: '#fef7f6',
+                    border: '1px solid #fadad9',
                     borderRadius: '4px',
-                    fontSize: '15px',
-                    fontWeight: 'bold',
-                    color: '#c5221f',
-                    cursor: 'pointer'
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    color: '#d93025',
+                    cursor: 'pointer',
+                    touchAction: 'manipulation',
+                    userSelect: 'none',
+                    WebkitTapHighlightColor: 'transparent',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                   disabled={!activeInput}
                 >
