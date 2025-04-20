@@ -1522,7 +1522,7 @@ function App() {
         if (terapeak >= 8) {
           terapeakMultiplier = 1.8; // Strong weight for high sales count (8+)
         } else if (terapeak >= 5) {
-          terapeakMultiplier = 1.5; // Moderate weight for medium sales count (5-7)
+          terapeakMultiplier = 1.3; // Moderate weight for medium sales count (5-7)
         } // else keep default 1.2 for 1-4 sales
         
         adjustedStr = (terapeakWeight * terapeakMultiplier * pTP) + (marketWeight * 0.4 * adjustedMarketSTR);
