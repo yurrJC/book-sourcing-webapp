@@ -1157,108 +1157,166 @@ type ScenarioKey = typeof SCENARIO_OPTIONS[number]['key'];
 
 // Add this helper function near the top of the file with other utility functions
 const safeOpenExternalLink = (url: string) => {
+  console.log(`Opening external link: ${url}`);
+  
   // Check if the app is running in PWA mode
   const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
                 (navigator as any).standalone === true;
   
   if (isPWA) {
-    // Create an iframe element that we'll hide
-    const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
-    document.body.appendChild(iframe);
-    
-    // Create a modal overlay with launch button
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
-    overlay.style.zIndex = '9999';
-    overlay.style.display = 'flex';
-    overlay.style.flexDirection = 'column';
-    overlay.style.justifyContent = 'center';
-    overlay.style.alignItems = 'center';
-    overlay.style.color = 'white';
-    overlay.style.textAlign = 'center';
-    overlay.style.padding = '20px';
-    
-    // Create container
-    const container = document.createElement('div');
-    container.style.maxWidth = '300px';
-    container.style.marginBottom = '20px';
-    
-    // Create heading
-    const heading = document.createElement('h3');
-    heading.textContent = 'External Link';
-    heading.style.marginBottom = '20px';
-    
-    // Create instructions
-    const instructions = document.createElement('p');
-    instructions.textContent = 'Tap the button below to open in your browser. Then tap outside this box to return to the app.';
-    instructions.style.marginBottom = '30px';
-    
-    // Create link button
-    const button = document.createElement('button');
-    button.textContent = 'Open Link';
-    button.style.backgroundColor = '#3a86ff';
-    button.style.color = 'white';
-    button.style.padding = '12px 24px';
-    button.style.borderRadius = '8px';
-    button.style.border = 'none';
-    button.style.fontWeight = 'bold';
-    button.style.fontSize = '16px';
-    button.style.cursor = 'pointer';
-    
-    // Handle click on the button - specific iOS PWA handling
-    button.addEventListener('click', () => {
-      // First remove the modal to let user know we're doing something
-      document.body.removeChild(overlay);
+    try {
+      // Create an iframe element that we'll hide
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
       
-      // Special handling for iOS browsers in PWA mode
-      if (iframe && iframe.contentWindow) {
-        // Use the iframe trick to avoid white screen on iOS
-        iframe.onload = () => {
-          // Once iframe is loaded, open the URL in a new tab
-          window.open(url, '_blank');
-        };
-        iframe.src = url;
-      } else {
-        // Fallback if iframe approach fails
-        window.open(url, '_blank');
-      }
+      // Create a modal overlay with launch button
+      const overlay = document.createElement('div');
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.backgroundColor = 'rgba(0,0,0,0.8)';
+      overlay.style.zIndex = '9999';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+      overlay.style.color = 'white';
+      overlay.style.textAlign = 'center';
+      overlay.style.padding = '20px';
       
-      // Clean up the iframe after a delay
-      setTimeout(() => {
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
+      // Create container
+      const container = document.createElement('div');
+      container.style.maxWidth = '300px';
+      container.style.marginBottom = '20px';
+      
+      // Create heading
+      const heading = document.createElement('h3');
+      heading.textContent = 'External Link';
+      heading.style.marginBottom = '20px';
+      
+      // Create instructions
+      const instructions = document.createElement('p');
+      instructions.textContent = 'Tap the button below to open in your browser. Then tap outside this box to return to the app.';
+      instructions.style.marginBottom = '30px';
+      
+      // Create URL display
+      const urlDisplay = document.createElement('p');
+      urlDisplay.textContent = url.length > 50 ? url.substring(0, 47) + '...' : url;
+      urlDisplay.style.fontSize = '12px';
+      urlDisplay.style.marginBottom = '20px';
+      urlDisplay.style.wordBreak = 'break-all';
+      urlDisplay.style.opacity = '0.7';
+      
+      // Create link button
+      const button = document.createElement('button');
+      button.textContent = 'Open Link';
+      button.style.backgroundColor = '#3a86ff';
+      button.style.color = 'white';
+      button.style.padding = '12px 24px';
+      button.style.borderRadius = '8px';
+      button.style.border = 'none';
+      button.style.fontWeight = 'bold';
+      button.style.fontSize = '16px';
+      button.style.cursor = 'pointer';
+      
+      // Handle click on the button
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // First remove the modal to let user know we're doing something
+        if (document.body.contains(overlay)) {
+          document.body.removeChild(overlay);
         }
-      }, 1000);
-    });
-    
-    // Assemble elements
-    container.appendChild(heading);
-    container.appendChild(instructions);
-    container.appendChild(button);
-    overlay.appendChild(container);
-    
-    // Add to document
-    document.body.appendChild(overlay);
-    
-    // Close when clicked outside the button
-    overlay.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement) !== button) {
-        document.body.removeChild(overlay);
-        // Clean up the iframe
-        if (document.body.contains(iframe)) {
-          document.body.removeChild(iframe);
+        
+        try {
+          // Try the direct approach first
+          const newWindow = window.open(url, '_blank');
+          
+          // If window.open fails or is blocked
+          if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+            console.log('Direct window.open failed, trying iframe approach');
+            
+            // Use the iframe trick for iOS
+            if (iframe && iframe.contentWindow) {
+              iframe.onload = () => {
+                try {
+                  window.location.href = url;
+                } catch (innerError) {
+                  console.error('Failed to redirect after iframe load', innerError);
+                  alert('Failed to open external link. Please try again or copy the URL manually.');
+                }
+              };
+              iframe.src = 'about:blank';
+            } else {
+              // Last resort: direct location change
+              window.location.href = url;
+            }
+          }
+        } catch (openError) {
+          console.error('Error opening window', openError);
+          
+          // Final fallback: location change
+          try {
+            window.location.href = url;
+          } catch (finalError) {
+            console.error('All link opening attempts failed', finalError);
+            alert('Failed to open link. Please try again later.');
+          }
         }
-      }
-    });
+        
+        // Clean up the iframe after a delay
+        setTimeout(() => {
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }, 1000);
+      });
+      
+      // Assemble elements
+      container.appendChild(heading);
+      container.appendChild(instructions);
+      container.appendChild(urlDisplay);
+      container.appendChild(button);
+      overlay.appendChild(container);
+      
+      // Add to document
+      document.body.appendChild(overlay);
+      
+      // Close when clicked outside the button
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          if (document.body.contains(overlay)) {
+            document.body.removeChild(overlay);
+          }
+          // Clean up the iframe
+          if (document.body.contains(iframe)) {
+            document.body.removeChild(iframe);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error in safeOpenExternalLink modal creation', error);
+      // Fallback to direct opening
+      window.open(url, '_blank');
+    }
   } else {
     // Not in PWA mode, just use normal window.open
-    window.open(url, '_blank');
+    try {
+      const newWindow = window.open(url, '_blank');
+      
+      // If window.open is blocked
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+        console.log('Direct window.open failed in non-PWA mode, trying location.href');
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Error opening link in non-PWA mode', error);
+      window.location.href = url;
+    }
   }
 };
 
@@ -2067,7 +2125,8 @@ function App() {
                       <div className="button-container">
                         <button 
                           className="ebay-link-button mobile-button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
                             // Get main title (before colon) and author for search
                             const mainTitle = searchResult?.bookDetails?.title 
                               ? searchResult.bookDetails.title.split(':')[0].trim() 
@@ -2101,7 +2160,8 @@ function App() {
                       <div className="button-container">
                         <button 
                           className="ebay-link-button mobile-button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
                             // Get main title (before colon) and author for search
                             const mainTitle = searchResult?.bookDetails?.title 
                               ? searchResult.bookDetails.title.split(':')[0].trim() 
@@ -2135,7 +2195,8 @@ function App() {
                       <div className="button-container">
                         <button 
                           className="ebay-link-button mobile-button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
                             // Get main title (before colon) and author for search
                             const mainTitle = searchResult?.bookDetails?.title 
                               ? searchResult.bookDetails.title.split(':')[0].trim() 
@@ -2193,7 +2254,10 @@ function App() {
                       <div className="button-container">
                         <button 
                           className="amazon-link-button mobile-button"
-                          onClick={() => safeOpenExternalLink(`https://www.amazon.com.au/s?k=${encodeURIComponent(isbn)}`)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            safeOpenExternalLink(`https://www.amazon.com.au/s?k=${encodeURIComponent(isbn)}`);
+                          }}
                         >
                           <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Amazon_logo.svg/2560px-Amazon_logo.svg.png" alt="Amazon" className="amazon-logo" />
                         </button>
@@ -2235,6 +2299,48 @@ function App() {
                       {searchResult.decidingReason}
                     </div>
                   )}
+                  
+                  {/* Debug button section */}
+                  <div style={{ marginTop: '20px', padding: '15px', background: '#f8f9fa', borderRadius: '8px', border: '1px solid #ddd' }}>
+                    <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#444', marginBottom: '10px' }}>Link Testing Panel</p>
+                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          console.log("Testing direct link to Google");
+                          window.open('https://www.google.com', '_blank');
+                        }}
+                        style={{ padding: '8px 12px', fontSize: '13px', background: '#f1f3f4', border: '1px solid #dadce0', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        Test window.open
+                      </button>
+                      
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          console.log("Testing safeOpenExternalLink function");
+                          safeOpenExternalLink('https://www.google.com');
+                        }}
+                        style={{ padding: '8px 12px', fontSize: '13px', background: '#e8f0fe', border: '1px solid #dadce0', borderRadius: '4px', cursor: 'pointer', color: '#1a73e8' }}
+                      >
+                        Test Safe Link
+                      </button>
+                      
+                      <button 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          console.log("Testing location.href redirect");
+                          // Store current location to come back
+                          const currentLocation = window.location.href;
+                          sessionStorage.setItem('returnTo', currentLocation);
+                          window.location.href = 'https://www.google.com';
+                        }}
+                        style={{ padding: '8px 12px', fontSize: '13px', background: '#fce8e6', border: '1px solid #dadce0', borderRadius: '4px', cursor: 'pointer', color: '#c5221f' }}
+                      >
+                        Test location.href
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
               
