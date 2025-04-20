@@ -1479,15 +1479,21 @@ function App() {
     
     // CLEAN IMPLEMENTATION WITH CLEAR PATHS
     
+    // Special case: Zero active listings but some sold items = 100% sell-through rate
+    if (activeCount !== null && activeCount === 0 && soldCount !== null && soldCount > 0) {
+      str = 1; // 100% sell-through rate
+      adjustedStr = 1; // Maximum probability
+      console.log(`Zero active listings with ${soldCount} sold items: 100% sell-through rate`);
+    }
     // First calculate raw STR if we have active and sold counts
-    if (activeCount !== null && activeCount > 0 && soldCount !== null) {
+    else if (activeCount !== null && activeCount > 0 && soldCount !== null) {
       str = soldCount / activeCount;
       if (str > 1) str = 1; // Cap at 100%
       console.log(`Raw STR: ${(str * 100).toFixed(1)}%`);
     }
     
     // Now handle blending with Terapeak if we have both market and terapeak data
-    if (str !== null && pTP !== null && terapeak !== null && activeCount !== null && soldCount !== null) {
+    if (str !== null && pTP !== null && terapeak !== null && activeCount !== null && soldCount !== null && activeCount !== 0) {
       // CORE BLENDING FORMULA
       
       // Calculate Terapeak boost and confidence factors
@@ -1532,7 +1538,7 @@ function App() {
       console.log(`Final blended probability: ${(adjustedStr * 100).toFixed(1)}%`);
     }
     // Handle case where we only have Terapeak data
-    else if ((activeCount === null || activeCount === 0) && pTP !== null) {
+    else if ((activeCount === null || activeCount === 0) && pTP !== null && (soldCount === null || soldCount === 0)) {
       // Use Terapeak directly as our probability
       adjustedStr = pTP;
       console.log(`Using Terapeak only: ${(adjustedStr * 100).toFixed(1)}%`);
@@ -1572,7 +1578,11 @@ function App() {
         decidingStage = 2;
         
         // Generate reason based on data composition
-        if (str !== null && pTP !== null) {
+        if (activeCount === 0 && soldCount !== null && soldCount > 0) {
+          // Zero active with sales case
+          decidingReason = `STRONG BUY: Zero active listings with ${soldCount} sold items indicates 100% sell-through rate. All inventory selling quickly.`;
+        }
+        else if (str !== null && pTP !== null) {
           // Both market and Terapeak
           if (str >= STR_THRESHOLD) {
             decidingReason = `STRONG BUY: Both STR (${(str * 100).toFixed(1)}%) and Terapeak-adjusted probability (${(adjustedStr * 100).toFixed(1)}%) exceed threshold of ${(STR_THRESHOLD * 100).toFixed(1)}%.`;
@@ -1801,9 +1811,12 @@ function App() {
         
         <div className="metric">
           <span>Sales to Ratio (STR)</span>
-          <div className="value">{str.toFixed(2)}</div>
+          <div className="value">{activeCount === 0 && soldCount > 0 ? "∞" : str.toFixed(2)}</div>
           <div className="inventory-counts">
-            Ratio of sold items to active listings
+            {activeCount === 0 && soldCount > 0 
+              ? "All inventory selling out completely" 
+              : "Ratio of sold items to active listings"
+            }
           </div>
         </div>
         
