@@ -1161,12 +1161,12 @@ const safeOpenExternalLink = (url: string) => {
   // instead of in the PWA's in-app browser view
   const isIOSStandalone = 'standalone' in window.navigator && (window.navigator as any).standalone;
   if (isIOSStandalone || window.matchMedia('(display-mode: standalone)').matches) {
-    // If in standalone mode (PWA installed)
-    window.location.href = url;
-    // Prevent blank screen on return by forcing reload after a delay
-    setTimeout(() => {
-      window.location.reload();
-    }, 100);
+    // For PWA mode, use a different approach that won't disrupt the app state
+    // Store current state before navigating
+    sessionStorage.setItem('preserveAppState', 'true');
+    
+    // Open in system browser without affecting current window
+    window.open(url, '_blank', 'noopener,noreferrer');
   } else {
     // Regular browser mode - open in new tab
     window.open(url, '_blank', 'noopener,noreferrer');
