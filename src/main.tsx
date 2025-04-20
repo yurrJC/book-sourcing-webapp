@@ -1157,19 +1157,18 @@ type ScenarioKey = typeof SCENARIO_OPTIONS[number]['key'];
 
 // Add this helper function near the top of the file with other utility functions
 const safeOpenExternalLink = (url: string) => {
-  // This pattern forces links to open in system browser or app
-  // instead of in the PWA's in-app browser view
-  const isIOSStandalone = 'standalone' in window.navigator && (window.navigator as any).standalone;
-  if (isIOSStandalone || window.matchMedia('(display-mode: standalone)').matches) {
-    // For PWA mode, use a different approach that won't disrupt the app state
-    // Store current state before navigating
-    sessionStorage.setItem('preserveAppState', 'true');
-    
-    // Open in system browser without affecting current window
+  // Using a consistent approach for all platforms that preserves app state
+  try {
+    // For most browsers and PWA contexts, this preserves the current state
+    // while opening the link in a separate context
     window.open(url, '_blank', 'noopener,noreferrer');
-  } else {
-    // Regular browser mode - open in new tab
-    window.open(url, '_blank', 'noopener,noreferrer');
+  } catch (error) {
+    // Fallback method if window.open fails
+    const link = document.createElement('a');
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    link.click();
   }
 };
 
