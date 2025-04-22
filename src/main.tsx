@@ -1631,11 +1631,10 @@ function App() {
     // Handle case where we only have Terapeak data
     else if ((activeCount === null || activeCount === 0) && pTP !== null && (soldCount === null || soldCount === 0)) {
       // Use Terapeak directly as our probability
-      // IMPROVEMENT 1: When no active listings, this is a POSITIVE signal (less competition)
-      // Add a boost to the Terapeak probability when there are no active listings
-      const noCompetitionBoost = activeCount === 0 ? 0.15 : 0; // 15% boost for no competition
-      adjustedStr = Math.min(pTP + noCompetitionBoost, 1.0); // Cap at 100%
-      console.log(`Using Terapeak only with no competition boost: ${(adjustedStr * 100).toFixed(1)}%`);
+      // No competition boost, but we recognize that zero actives isn't a negative signal
+      // Just use Terapeak directly as our base probability
+      adjustedStr = pTP; // Use Terapeak probability directly
+      console.log(`Using Terapeak only without competition boost: ${(adjustedStr * 100).toFixed(1)}%`);
     }
     // Handle case where we only have market data
     else if (str !== null && (pTP === null || terapeak === null)) {
@@ -1876,11 +1875,10 @@ function App() {
     
     // Then check if we should do Amazon calculation
     if (bsr && reviews) {
-      // If STR and Terapeak failed, and we have Amazon data, try Amazon Stage 3
-      const currentVerdict = searchResult.verdict;
-      // Wait a moment for the first calculation to complete
+      // Wait a moment for the first calculation to complete, then check the current verdict state
       setTimeout(() => {
-        if (currentVerdict === "REJECT") {
+        // Get the latest verdict from state
+        if (searchResult.verdict === "REJECT") {
           calculateAmazonStage3();
         }
         setCalculationInProgress(false);
