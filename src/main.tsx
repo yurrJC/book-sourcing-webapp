@@ -1631,8 +1631,11 @@ function App() {
     // Handle case where we only have Terapeak data
     else if ((activeCount === null || activeCount === 0) && pTP !== null && (soldCount === null || soldCount === 0)) {
       // Use Terapeak directly as our probability
-      adjustedStr = pTP;
-      console.log(`Using Terapeak only: ${(adjustedStr * 100).toFixed(1)}%`);
+      // IMPROVEMENT 1: When no active listings, this is a POSITIVE signal (less competition)
+      // Add a boost to the Terapeak probability when there are no active listings
+      const noCompetitionBoost = activeCount === 0 ? 0.15 : 0; // 15% boost for no competition
+      adjustedStr = Math.min(pTP + noCompetitionBoost, 1.0); // Cap at 100%
+      console.log(`Using Terapeak only with no competition boost: ${(adjustedStr * 100).toFixed(1)}%`);
     }
     // Handle case where we only have market data
     else if (str !== null && (pTP === null || terapeak === null)) {
@@ -1687,7 +1690,8 @@ function App() {
           // Only market data
           decidingReason = `BUY based on strong market data: STR of ${(adjustedStr * 100).toFixed(1)}%.`;
         }
-      } else {
+      }
+      else {
         verdict = "REJECT";
         decidingStage = 2;
         
@@ -1750,8 +1754,9 @@ function App() {
     
     // IMPROVED MATHEMATICAL MODEL FOR AMAZON STAGE 3
     
-    // 1. Base BSR thresholds by popularity tier - reduced from 500,000 to 250,000
-    const BSR_THRESHOLD_BASE = 250000;
+    // IMPROVEMENT 2: Better BSR threshold - recognizing that books can range to 1,000,000+
+    // Increase the base threshold to account for the full range of book BSRs
+    const BSR_THRESHOLD_BASE = 500000; // Increased from 250,000 to 500,000
     
     // 2. Calculate review strength using sigmoid-inspired function
     // This creates a more natural S-curve that prevents extreme values
@@ -1762,13 +1767,14 @@ function App() {
     // Higher reviews increase threshold but with a natural ceiling
     const adjustedBSRThreshold = BSR_THRESHOLD_BASE * (1 + reviewStrength);
     
-    // 4. Hard cap check - immediately reject if BSR exceeds 250,000
-    if (bsr > 250000) {
+    // IMPROVEMENT 2: Adjust the hard cap to be more lenient for books
+    // 4. Hard cap check - increased from 250,000 to 400,000
+    if (bsr > 400000) {
       const updatedVerdict: SourcingVerdict = {
         ...currentVerdict,
         verdict: "REJECT",
         decidingStage: 3,
-        decidingReason: `AMAZON STAGE 3 HARD FAIL: BSR of ${bsr.toLocaleString()} exceeds hard cap of 250,000. Book too slow-selling regardless of reviews.`,
+        decidingReason: `AMAZON STAGE 3 HARD FAIL: BSR of ${bsr.toLocaleString()} exceeds hard cap of 400,000. Book too slow-selling regardless of reviews.`,
         equilibriumDetails: currentVerdict.equilibriumDetails,
         terapeakDetails: currentVerdict.terapeakDetails,
         manualInputs: {
@@ -1782,28 +1788,49 @@ function App() {
       return;
     }
     
-    // Continue with regular calculation for BSR <= 250,000
+    // Continue with regular calculation for BSR <= 400,000
     // 5. Calculate BSR quality score (0-1 scale) using a sigmoid function
-    // This creates a smooth transition between "good" and "bad" BSRs
-    // rather than a hard cutoff
+    // IMPROVEMENT 2: Adjust the sigmoid function to be more lenient with book BSRs
     const bsrRatio = bsr / adjustedBSRThreshold;
-    const bsrQuality = 1 / (1 + Math.exp(5 * (bsrRatio - 0.8)));
+    // Modify the sigmoid function to shift the curve right (more lenient)
+    const bsrQuality = 1 / (1 + Math.exp(4 * (bsrRatio - 1.0))); // Changed from 5*(bsrRatio-0.8)
     
     // 6. For debugging/display - calculate % of threshold
     const percentOfThreshold = (bsr / adjustedBSRThreshold) * 100;
     
-    // 7. Make final decision - BSR quality score threshold of 0.6
-    // This allows some books slightly above the threshold to still pass
-    // if they're close enough
-    const qualityThreshold = 0.6;
+    // 7. Make final decision
+    // IMPROVEMENT 2: Lower the quality threshold slightly to allow more borderline cases
+    const qualityThreshold = 0.55; // Lowered from 0.6
     const passesAmazonCheck = bsrQuality >= qualityThreshold;
     
-    let verdict: "BUY" | "REJECT" = passesAmazonCheck ? "BUY" : "REJECT";
+    // IMPROVEMENT 3: Handle sparse data scenarios better
+    // If we have very little eBay data but good Amazon metrics, be more lenient
+    const hasMinimalEbayData = 
+      (currentVerdict?.manualInputs?.lowestActivePrice === 0 || currentVerdict?.manualInputs?.lowestActivePrice === null) &&
+      (currentVerdict?.manualInputs?.recentSoldPrice === 0 || currentVerdict?.manualInputs?.recentSoldPrice === null) &&
+      (currentVerdict?.manualInputs?.terapeakSales === null || (currentVerdict?.manualInputs?.terapeakSales !== undefined && currentVerdict?.manualInputs?.terapeakSales <= 2));
+    
+    // In sparse data scenarios, if BSR is very good, boost the quality
+    let sparseDataBoost = 0;
+    if (hasMinimalEbayData && bsr < 200000) {
+      sparseDataBoost = 0.15; // 15% boost for very good BSR with minimal eBay data
+      console.log(`Applied sparse data boost: ${(sparseDataBoost * 100).toFixed(1)}% for good BSR with minimal eBay data`);
+    }
+    
+    // Apply the boost and check again
+    const boostedBsrQuality = Math.min(bsrQuality + sparseDataBoost, 1.0);
+    const passesBoostedCheck = boostedBsrQuality >= qualityThreshold;
+    
+    let verdict: "BUY" | "REJECT" = passesBoostedCheck ? "BUY" : "REJECT";
     let decidingReason = "";
     
     // Decision reason with detailed statistics
-    if (passesAmazonCheck) {
-      decidingReason = `AMAZON STAGE 3 PASS: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost.`;
+    if (passesBoostedCheck) {
+      if (sparseDataBoost > 0) {
+        decidingReason = `AMAZON STAGE 3 PASS (SPARSE DATA BOOST): Base BSR quality ${(bsrQuality * 100).toFixed(1)}% + ${(sparseDataBoost * 100).toFixed(0)}% boost = ${(boostedBsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost.`;
+      } else {
+        decidingReason = `AMAZON STAGE 3 PASS: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost.`;
+      }
     } else {
       decidingReason = `AMAZON STAGE 3 FAIL: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost.`;
     }
@@ -1815,7 +1842,11 @@ function App() {
       decidingStage: 3,
       decidingReason,
       equilibriumDetails: currentVerdict.equilibriumDetails,
-      terapeakDetails: currentVerdict.terapeakDetails,
+      terapeakDetails: currentVerdict.terapeakDetails ? {
+        ...currentVerdict.terapeakDetails,
+        // IMPORTANT: Update the salesRate to include Amazon quality if this is a PASS
+        salesRate: passesBoostedCheck ? boostedBsrQuality : (currentVerdict.terapeakDetails.salesRate || 0)
+      } : null,
       manualInputs: {
         ...currentVerdict.manualInputs,
         amazonBSR: bsr,
