@@ -1689,7 +1689,8 @@ function App() {
             const pBSRBoostFactor = 0.3 * Math.exp(-bsr / 200000);
             const bsrIncrease = (1 - currentProbability) * pBSRBoostFactor;
             const boostedProbability = currentProbability + bsrIncrease;
-            decidingReason = `Stage 3 (BSR ${bsr.toLocaleString()} only): Probability increased by ${(bsrIncrease * 100).toFixed(1)}% from ${ (currentProbability * 100).toFixed(1)}% to ${(boostedProbability * 100).toFixed(1)}%.`;
+            // FIX: Append to reason instead of overwriting
+            decidingReason += ` Then, Stage 3 (BSR ${bsr.toLocaleString()} only): Probability increased by ${(bsrIncrease * 100).toFixed(1)}% from ${ (currentProbability * 100).toFixed(1)}% to ${(boostedProbability * 100).toFixed(1)}%.`;
             currentProbability = boostedProbability; // Update main probability
             if (currentProbability >= STR_THRESHOLD) {
               verdict = "BUY";
@@ -1707,7 +1708,8 @@ function App() {
             const pReviewBoostFactor = 0.2 * (1 - Math.exp(-reviews / 1000));
             const reviewIncrease = (1 - currentProbability) * pReviewBoostFactor;
             const boostedProbability = currentProbability + reviewIncrease;
-            decidingReason = `Stage 3 (Reviews ${reviews.toLocaleString()} only): Probability increased by ${(reviewIncrease * 100).toFixed(1)}% from ${(currentProbability * 100).toFixed(1)}% to ${(boostedProbability * 100).toFixed(1)}%.`;
+            // FIX: Append to reason instead of overwriting
+            decidingReason += ` Then, Stage 3 (Reviews ${reviews.toLocaleString()} only): Probability increased by ${(reviewIncrease * 100).toFixed(1)}% from ${(currentProbability * 100).toFixed(1)}% to ${(boostedProbability * 100).toFixed(1)}%.`;
             currentProbability = boostedProbability; // Update main probability
             if (currentProbability >= STR_THRESHOLD) {
               verdict = "BUY";
@@ -1722,7 +1724,7 @@ function App() {
         } else {
           // No Amazon data provided, verdict remains REJECT from previous stages
           if (verdict === "REJECT") {
-            decidingReason += ` No Amazon data. Final Verdict: REJECT.`;
+            decidingReason += ` No Amazon data for enhancement. Final Verdict: REJECT.`; // Adjusted message slightly
             console.log(`Calc: No BSR/Reviews. Final Verdict: REJECT`);
           }
         }
