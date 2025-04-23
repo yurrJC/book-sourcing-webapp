@@ -1541,26 +1541,28 @@ function App() {
   };
 
   const calculateCombinedVerdict = () => {
-    if (!searchResult) return;
+    // Ensure searchResult exists and has bookDetails before proceeding
+    if (!searchResult || !searchResult.bookDetails) return;
 
     setCalculationInProgress(true);
     setError(''); // Clear previous errors
 
-    // --- 1. Parse Inputs ---
+    // --- 1. Parse Inputs --- (Inputs are taken directly from state)
     const activeCount = lowestActivePrice ? parseInt(lowestActivePrice) : null;
     const soldCount = recentSoldPrice ? parseInt(recentSoldPrice) : null;
     const terapeak = terapeakSales ? parseInt(terapeakSales) : null;
     const bsr = amazonBSR ? parseInt(amazonBSR) : null;
     const reviews = amazonReviews ? parseInt(amazonReviews) : null;
 
+    // --- Initialize calculation variables for THIS RUN --- (Fix for double-calc bug)
     let currentProbability = 0.0;
     let verdict: "BUY" | "REJECT" = "REJECT";
     let decidingReason = "Initial REJECT";
-    let stageReached = 0; // 0: Initial, 1: STR, 2: Terapeak, 3: BSR, 4: Reviews
+    let stageReached = 0; // 0: Initial, 1: STR, 2: Terapeak, 3: Amazon
+    let baseStr: number | null = null;
 
     // --- 2. Stage 1: Base STR Calculation ---
     stageReached = 1;
-    let baseStr: number | null = null;
     if (activeCount !== null && soldCount !== null) {
       if (activeCount > 0) {
         baseStr = soldCount / activeCount;
@@ -1569,27 +1571,22 @@ function App() {
         decidingReason = `Stage 1: Base STR = ${(baseStr * 100).toFixed(1)}%.`;
         console.log(`Calc: Base STR = ${soldCount}/${activeCount} = ${currentProbability.toFixed(3)}`);
       } else if (soldCount > 0) {
-        // Zero actives, but sales exist -> 100% STR
         baseStr = 1.0;
         currentProbability = 1.0;
         decidingReason = `Stage 1: Base STR = 100% (0 Actives, ${soldCount} Solds).`;
         console.log(`Calc: Base STR = 1.0 (0 Actives, ${soldCount} Solds)`);
       } else {
-        // Zero actives, zero solds
-        baseStr = 0.0; // Treat as 0% STR
+        baseStr = 0.0;
         currentProbability = 0.0;
         decidingReason = `Stage 1: Base STR = 0% (0 Actives, 0 Solds). Requires enhancement.`;
         console.log(`Calc: Base STR = 0.0 (0 Actives, 0 Solds)`);
       }
     } else if (activeCount !== null && activeCount > 0 && soldCount === null) {
-        // Actives exist, but no solds -> 0% STR
-        baseStr = 0.0;
-        currentProbability = 0.0;
-        decidingReason = `Stage 1: Base STR = 0% (${activeCount} Actives, 0 Solds).`;
-        console.log(`Calc: Base STR = 0.0 (${activeCount} Actives, 0 Solds)`);
-    }
-     else {
-      // Insufficient STR data
+      baseStr = 0.0;
+      currentProbability = 0.0;
+      decidingReason = `Stage 1: Base STR = 0% (${activeCount} Actives, 0 Solds).`;
+      console.log(`Calc: Base STR = 0.0 (${activeCount} Actives, 0 Solds)`);
+    } else {
       decidingReason = `Stage 1: Insufficient Active/Sold data. Requires enhancement.`;
       console.log(`Calc: Insufficient STR data`);
     }
@@ -1599,8 +1596,9 @@ function App() {
       decidingReason += ` Passes Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
       console.log(`Calc: Verdict BUY at Stage 1`);
     } else {
-       decidingReason += ` Below Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
-       console.log(`Calc: Below threshold at Stage 1, proceeding.`);
+      decidingReason += ` Below Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
+      console.log(`Calc: Below threshold at Stage 1, proceeding.`);
+
       // --- 3. Stage 2: Terapeak Enhancement ---
       if (terapeak !== null && terapeak > 0) {
         stageReached = 2;
@@ -1613,125 +1611,153 @@ function App() {
         if (currentProbability >= STR_THRESHOLD) {
           verdict = "BUY";
           decidingReason += ` Passes Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
-           console.log(`Calc: Verdict BUY at Stage 2`);
+          console.log(`Calc: Verdict BUY at Stage 2`);
         } else {
           decidingReason += ` Below Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
           console.log(`Calc: Below threshold at Stage 2, proceeding.`);
-          // --- 4. Stage 3: Combined Amazon BSR & Review Evaluation (using improved logic) ---
-          if (bsr !== null && bsr > 0 && reviews !== null && reviews > 0) {
-            stageReached = 3; // Mark as reaching Amazon stage
-            console.log(`Calc: Entering Stage 3/4 (Amazon BSR/Reviews) with BSR=${bsr}, Reviews=${reviews}`);
+          // Proceed to Stage 3 (Amazon) even if Terapeak fails
+        }
+      } else {
+        // No Terapeak data, proceed to Stage 3 (Amazon) if verdict is still REJECT
+        if (verdict === "REJECT") {
+          decidingReason += ` No Terapeak data.`;
+          console.log(`Calc: No Terapeak, proceeding.`);
+        }
+      }
 
-            // --- Start of Integrated Amazon Logic ---
+      // --- 4. Stage 3: Amazon BSR / Review Enhancement (Only if verdict is still REJECT) ---
+      if (verdict === "REJECT") {
+        const hasBSR = bsr !== null && bsr > 0;
+        const hasReviews = reviews !== null && reviews > 0;
 
-            // IMPROVEMENT 2: Better BSR threshold - recognizing that books can range to 1,000,000+
+        // Enter Amazon stage if BSR or Reviews data is present
+        if (hasBSR || hasReviews) {
+          stageReached = 3; // Mark as reaching Amazon stage
+          console.log(`Calc: Entering Stage 3 (Amazon) with BSR=${bsr ?? 'N/A'}, Reviews=${reviews ?? 'N/A'}`);
+
+          if (hasBSR && hasReviews) {
+            // --- Scenario: Both BSR and Reviews Provided (Use Complex Logic) ---
+            console.log(`Calc: Using complex Amazon logic (BSR & Reviews)`);
             const BSR_THRESHOLD_BASE = 500000;
-
-            // 2. Calculate review strength using sigmoid-inspired function
             const reviewStrength = 2 / (1 + Math.exp(-0.3 * Math.log10(reviews))) - 0.5;
-
-            // 3. Apply review strength to BSR threshold with diminishing returns
             const adjustedBSRThreshold = BSR_THRESHOLD_BASE * (1 + reviewStrength);
 
-            // 4. Hard cap check - increased from 250,000 to 400,000
             if (bsr > 400000) {
               verdict = "REJECT";
-              decidingReason = `AMAZON STAGE 3 HARD FAIL: BSR of ${bsr.toLocaleString()} exceeds hard cap of 400,000. Book too slow-selling regardless of reviews.`;
+              decidingReason = `AMAZON STAGE 3 HARD FAIL: BSR of ${bsr.toLocaleString()} exceeds hard cap of 400,000.`;
               console.log(`Calc: Amazon Hard Fail (BSR > 400k)`);
-              // We stop here if hard fail
             } else {
-              // Continue with regular calculation for BSR <= 400,000
-              // 5. Calculate BSR quality score (0-1 scale) using a sigmoid function
               const bsrRatio = bsr / adjustedBSRThreshold;
               const bsrQuality = 1 / (1 + Math.exp(4 * (bsrRatio - 1.0)));
-
-              // 6. For debugging/display - calculate % of threshold
               const percentOfThreshold = (bsr / adjustedBSRThreshold) * 100;
+              const qualityThreshold = 0.55;
 
-              // 7. Make final decision
-              const qualityThreshold = 0.55; // Lowered from 0.6
-              const passesAmazonCheck = bsrQuality >= qualityThreshold;
-
-              // IMPROVEMENT 3: Handle sparse data scenarios better
               const hasMinimalEbayData =
                 (activeCount === 0 || activeCount === null) &&
                 (soldCount === 0 || soldCount === null) &&
                 (terapeak === null || (terapeak !== undefined && terapeak <= 2));
 
-              // In sparse data scenarios, if BSR is very good, boost the quality
               let sparseDataBoost = 0;
               if (hasMinimalEbayData && bsr < 200000) {
                 sparseDataBoost = 0.15;
                 console.log(`Calc: Applied sparse data boost: ${(sparseDataBoost * 100).toFixed(1)}%`);
               }
 
-              // Apply the boost and check again
               const boostedBsrQuality = Math.min(bsrQuality + sparseDataBoost, 1.0);
               const passesBoostedCheck = boostedBsrQuality >= qualityThreshold;
 
-              // Determine verdict based on Amazon check
               if (passesBoostedCheck) {
-                // If it passes the Amazon check, the overall verdict becomes BUY
                 verdict = "BUY";
-                currentProbability = boostedBsrQuality; // Use BSR quality as a proxy probability for display/record
+                currentProbability = boostedBsrQuality; // Use BSR quality score as final probability
                 if (sparseDataBoost > 0) {
-                  decidingReason = `AMAZON STAGE 3 PASS (SPARSE DATA BOOST): Base BSR quality ${(bsrQuality * 100).toFixed(1)}% + ${(sparseDataBoost * 100).toFixed(0)}% boost = ${(boostedBsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost.`;
+                  decidingReason = `AMAZON STAGE 3 PASS (SPARSE DATA BOOST): Base BSR quality ${(bsrQuality * 100).toFixed(1)}% + ${(sparseDataBoost * 100).toFixed(0)}% boost = ${(boostedBsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews = ${(reviewStrength * 100).toFixed(0)}% boost.`;
                   console.log(`Calc: Verdict BUY at Stage 3 (Boosted Amazon Pass)`);
                 } else {
-                  decidingReason = `AMAZON STAGE 3 PASS: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost.`;
+                  decidingReason = `AMAZON STAGE 3 PASS: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews = ${(reviewStrength * 100).toFixed(0)}% boost.`;
                   console.log(`Calc: Verdict BUY at Stage 3 (Amazon Pass)`);
                 }
               } else {
-                // If it fails the Amazon check, the verdict remains REJECT (from Stage 2)
                 verdict = "REJECT";
-                currentProbability = boostedBsrQuality; // Still store the quality score
-                decidingReason = `AMAZON STAGE 3 FAIL: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adjusted threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews provides ${(reviewStrength * 100).toFixed(0)}% threshold boost. Final Verdict: REJECT.`;
+                currentProbability = boostedBsrQuality; // Update probability even on fail
+                decidingReason = `AMAZON STAGE 3 FAIL: BSR quality score ${(bsrQuality * 100).toFixed(1)}% < threshold (${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews = ${(reviewStrength * 100).toFixed(0)}% boost. Final Verdict: REJECT.`;
                 console.log(`Calc: Verdict REJECT at Stage 3 (Amazon Fail)`);
               }
             }
-            // --- End of Integrated Amazon Logic ---
+          } else if (hasBSR) {
+            // --- Scenario: Only BSR Provided (Use Simple BSR Boost) ---
+            console.log(`Calc: Using simple Amazon logic (BSR only)`);
+            const pBSRBoostFactor = 0.3 * Math.exp(-bsr / 200000);
+            const bsrIncrease = (1 - currentProbability) * pBSRBoostFactor;
+            const boostedProbability = currentProbability + bsrIncrease;
+            decidingReason = `Stage 3 (BSR ${bsr.toLocaleString()} only): Probability increased by ${(bsrIncrease * 100).toFixed(1)}% from ${ (currentProbability * 100).toFixed(1)}% to ${(boostedProbability * 100).toFixed(1)}%.`;
+            currentProbability = boostedProbability; // Update main probability
+            if (currentProbability >= STR_THRESHOLD) {
+              verdict = "BUY";
+              decidingReason += ` Passes Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
+              console.log(`Calc: Verdict BUY at Stage 3 (Simple BSR Pass)`);
+            } else {
+              verdict = "REJECT"; // Ensure reject if it doesn't pass
+              decidingReason += ` Below Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%). Final Verdict: REJECT.`;
+              console.log(`Calc: Verdict REJECT at Stage 3 (Simple BSR Fail)`);
+            }
 
-          } else {
-            // No BSR/Review data, verdict stands from Terapeak stage
-            if (verdict === "REJECT") {
-              if (bsr === null || bsr <= 0) decidingReason += ` No BSR data.`;
-              if (reviews === null || reviews <= 0) decidingReason += ` No Review data.`;
-              decidingReason += ` Final Verdict: REJECT.`;
-              console.log(`Calc: No BSR/Reviews. Final Verdict: REJECT`);
+          } else if (hasReviews) {
+            // --- Scenario: Only Reviews Provided (Use Simple Review Boost) ---
+             console.log(`Calc: Using simple Amazon logic (Reviews only)`);
+            const pReviewBoostFactor = 0.2 * (1 - Math.exp(-reviews / 1000));
+            const reviewIncrease = (1 - currentProbability) * pReviewBoostFactor;
+            const boostedProbability = currentProbability + reviewIncrease;
+            decidingReason = `Stage 3 (Reviews ${reviews.toLocaleString()} only): Probability increased by ${(reviewIncrease * 100).toFixed(1)}% from ${(currentProbability * 100).toFixed(1)}% to ${(boostedProbability * 100).toFixed(1)}%.`;
+            currentProbability = boostedProbability; // Update main probability
+            if (currentProbability >= STR_THRESHOLD) {
+              verdict = "BUY";
+              decidingReason += ` Passes Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%).`;
+              console.log(`Calc: Verdict BUY at Stage 3 (Simple Review Pass)`);
+            } else {
+              verdict = "REJECT"; // Ensure reject if it doesn't pass
+              decidingReason += ` Below Threshold (${(STR_THRESHOLD * 100).toFixed(1)}%). Final Verdict: REJECT.`;
+              console.log(`Calc: Verdict REJECT at Stage 3 (Simple Review Fail)`);
             }
           }
-        }
-      } else {
-        // No Terapeak, verdict stands from STR stage
-        if (verdict === "REJECT") {
-          decidingReason += ` No Terapeak data. Final Verdict: REJECT.`;
-          console.log(`Calc: No Terapeak. Final Verdict: REJECT`);
+        } else {
+          // No Amazon data provided, verdict remains REJECT from previous stages
+          if (verdict === "REJECT") {
+            decidingReason += ` No Amazon data. Final Verdict: REJECT.`;
+            console.log(`Calc: No BSR/Reviews. Final Verdict: REJECT`);
+          }
         }
       }
     }
 
-    // --- 6. Update State ---
-    // Use the 'currentProbability' determined by the final stage (STR, Terapeak, or Amazon BSR Quality)
-    const finalProbability = Math.min(currentProbability, 1.0);
+    // --- 6. Update State --- (Fix for double-calc bug)
+    // Ensure the finalProbability reflects the outcome of the last relevant stage
+    const finalProbability = Math.min(currentProbability, 1.0); // Cap final probability
 
     const updatedVerdict: SourcingVerdict = {
-      ...searchResult,
-      verdict,
-      decidingStage: stageReached, // Store which stage the calculation reached/determined the verdict
-      decidingReason,
+      // Carry over only essential static details from the initial search result
+      bookDetails: searchResult.bookDetails,
+      buyCost: searchResult.buyCost,
+
+      // Set all calculation-dependent fields based on THIS RUN's results
+      verdict, // Final verdict from this run
+      decidingStage: stageReached, // Stage reached in this run
+      decidingReason, // Reason from this run
+      sellingPrice: 0, // Reset/Recalculate based on this run if needed
+      profit: 0, // Reset/Recalculate based on this run if needed
+      roi: 0, // Reset/Recalculate based on this run if needed
       equilibriumDetails: baseStr !== null ? {
         probability: baseStr,
         threshold: STR_THRESHOLD,
         passesStage1: baseStr >= STR_THRESHOLD,
         str: baseStr
       } : null,
-      // Store the FINAL probability (potentially from Amazon stage) in terapeakDetails.salesRate
+      // Use the final calculated probability for display
       terapeakDetails: {
-        // If stage 3 (Amazon) was reached and passed, use boostedBsrQuality, otherwise use the probability from STR/Terapeak stages
         salesRate: finalProbability,
         threshold: STR_THRESHOLD,
-        passesStage2: finalProbability >= STR_THRESHOLD // Check if final probability passes
+        passesStage2: finalProbability >= STR_THRESHOLD // Did the final probability pass?
       },
+      // Record the inputs used in THIS calculation run
       manualInputs: {
         lowestActivePrice: activeCount,
         recentSoldPrice: soldCount,
