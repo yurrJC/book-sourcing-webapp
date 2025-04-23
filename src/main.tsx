@@ -1638,48 +1638,62 @@ function App() {
           if (hasBSR && hasReviews) {
             // --- Scenario: Both BSR and Reviews Provided (Use Complex Logic) ---
             console.log(`Calc: Using complex Amazon logic (BSR & Reviews)`);
-            const BSR_THRESHOLD_BASE = 500000;
-            const reviewStrength = 2 / (1 + Math.exp(-0.3 * Math.log10(reviews))) - 0.5;
-            const adjustedBSRThreshold = BSR_THRESHOLD_BASE * (1 + reviewStrength);
-
-            if (bsr > 400000) {
+            // --- New BSR Logic (700k cap, logarithmic scaling) --- 
+            const BSR_HARD_CAP = 700000;
+            const BSR_THRESHOLD_BASE = 500000; // Base threshold, adjusted by reviews
+            const LOG_STEEPNESS_FACTOR = 3; // Controls how quickly quality drops off
+            const qualityThreshold = 0.55; // Threshold for BUY verdict in this stage
+            
+            // 1. Check Hard Cap
+            if (bsr > BSR_HARD_CAP) {
               verdict = "REJECT";
-              decidingReason = `AMAZON STAGE 3 HARD FAIL: BSR of ${bsr.toLocaleString()} exceeds hard cap of 400,000.`;
-              console.log(`Calc: Amazon Hard Fail (BSR > 400k)`);
+              decidingReason += ` Then, AMAZON STAGE 3 HARD FAIL: BSR of ${bsr.toLocaleString()} exceeds hard cap of ${BSR_HARD_CAP.toLocaleString()}.`;
+              console.log(`Calc: Amazon Hard Fail (BSR > ${BSR_HARD_CAP})`);
             } else {
-              const bsrRatio = bsr / adjustedBSRThreshold;
-              const bsrQuality = 1 / (1 + Math.exp(4 * (bsrRatio - 1.0)));
-              const percentOfThreshold = (bsr / adjustedBSRThreshold) * 100;
-              const qualityThreshold = 0.55;
-
-              const hasMinimalEbayData =
-                (activeCount === 0 || activeCount === null) &&
-                (soldCount === 0 || soldCount === null) &&
-                (terapeak === null || (terapeak !== undefined && terapeak <= 2));
-
+              // 2. Calculate Review Strength
+              const reviewStrength = 2 / (1 + Math.exp(-0.3 * Math.log10(Math.max(reviews, 1)))) - 0.5;
+              // 3. Calculate Adjusted Threshold (higher reviews make it easier to pass)
+              const adjustedBSRThreshold = BSR_THRESHOLD_BASE * (1 + reviewStrength);
+              console.log(`Calc: Review Strength = ${reviewStrength.toFixed(2)}, Adj. BSR Threshold = ${Math.round(adjustedBSRThreshold).toLocaleString()}`);
+              
+              // 4. Calculate Logarithmic BSR Quality
+              const logBSR = Math.log(Math.max(bsr, 1)); // Use log(1)=0 for BSR=0/null
+              const logAdjustedThreshold = Math.log(Math.max(adjustedBSRThreshold, 1));
+              const logRatio = logBSR / logAdjustedThreshold; // Ratio of logs
+              const bsrQuality = 1 / (1 + Math.exp(LOG_STEEPNESS_FACTOR * (logRatio - 1.0)));
+              console.log(`Calc: logBSR = ${logBSR.toFixed(2)}, logAdjThreshold = ${logAdjustedThreshold.toFixed(2)}, logRatio = ${logRatio.toFixed(2)}, bsrQuality = ${bsrQuality.toFixed(3)}`);
+              
+              // 5. Check for Sparse eBay Data Boost
+              const hasMinimalEbayData = 
+                (activeCount === 0 || activeCount === null) && 
+                (soldCount === 0 || soldCount === null) && 
+                (terapeak === null || terapeak <= 2);
+                
               let sparseDataBoost = 0;
-              if (hasMinimalEbayData && bsr < 200000) {
+              if (hasMinimalEbayData && bsr < 200000) { // Keep boost condition same for now
                 sparseDataBoost = 0.15;
                 console.log(`Calc: Applied sparse data boost: ${(sparseDataBoost * 100).toFixed(1)}%`);
               }
-
+              
               const boostedBsrQuality = Math.min(bsrQuality + sparseDataBoost, 1.0);
+              
+              // 6. Determine Verdict based on Boosted Quality
               const passesBoostedCheck = boostedBsrQuality >= qualityThreshold;
-
+              
               if (passesBoostedCheck) {
                 verdict = "BUY";
                 currentProbability = boostedBsrQuality; // Use BSR quality score as final probability
                 if (sparseDataBoost > 0) {
-                  decidingReason = `AMAZON STAGE 3 PASS (SPARSE DATA BOOST): Base BSR quality ${(bsrQuality * 100).toFixed(1)}% + ${(sparseDataBoost * 100).toFixed(0)}% boost = ${(boostedBsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews = ${(reviewStrength * 100).toFixed(0)}% boost.`;
+                  decidingReason += ` Then, AMAZON STAGE 3 PASS (SPARSE DATA BOOST): Base log BSR quality ${(bsrQuality * 100).toFixed(1)}% + ${(sparseDataBoost * 100).toFixed(0)}% boost = ${(boostedBsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} vs adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}.`;
                   console.log(`Calc: Verdict BUY at Stage 3 (Boosted Amazon Pass)`);
                 } else {
-                  decidingReason = `AMAZON STAGE 3 PASS: BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews = ${(reviewStrength * 100).toFixed(0)}% boost.`;
+                  decidingReason += ` Then, AMAZON STAGE 3 PASS: Log BSR quality score ${(bsrQuality * 100).toFixed(1)}% (threshold: ${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} vs adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}.`;
                   console.log(`Calc: Verdict BUY at Stage 3 (Amazon Pass)`);
                 }
               } else {
                 verdict = "REJECT";
                 currentProbability = boostedBsrQuality; // Update probability even on fail
-                decidingReason = `AMAZON STAGE 3 FAIL: BSR quality score ${(bsrQuality * 100).toFixed(1)}% < threshold (${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} is ${percentOfThreshold.toFixed(1)}% of adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. ${reviews} reviews = ${(reviewStrength * 100).toFixed(0)}% boost. Final Verdict: REJECT.`;
+                decidingReason += ` Then, AMAZON STAGE 3 FAIL: Log BSR quality score ${(boostedBsrQuality * 100).toFixed(1)}% < threshold (${(qualityThreshold * 100)}%). BSR ${bsr.toLocaleString()} vs adj threshold ${Math.round(adjustedBSRThreshold).toLocaleString()}. Final Verdict: REJECT.`;
                 console.log(`Calc: Verdict REJECT at Stage 3 (Amazon Fail)`);
               }
             }
