@@ -83,6 +83,7 @@ export interface SourcingVerdict {
     pages?: number;
     date_published?: string;
     dimensions?: string;
+    source?: 'isbndb' | 'googlebooks'; // Track which API provided the data
   } | null;
   // Add manual input data
   manualInputs?: {

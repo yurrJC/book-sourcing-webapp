@@ -472,7 +472,8 @@ input:focus, select:focus {
 /* Add styles for Amazon data in book info */
 .book-amazon-price,
 .book-amazon-rank,
-.book-isbn {
+.book-isbn,
+.book-source {
   font-size: 0.8rem;
   color: var(--text-light);
   margin-top: 0.25rem; /* Add a little space above */

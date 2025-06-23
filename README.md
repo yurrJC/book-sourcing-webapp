@@ -5,7 +5,7 @@ This template provides a minimal setup to get React working in Vite with HMR and
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
 ## Expanding the ESLint configuration
 
@@ -59,12 +59,22 @@ A progressive web app for book sourcing and analysis to help with book reselling
 
 ## Features
 
-- ISBN lookup for book details
+- ISBN lookup for book details with fallback system (ISBNdb → Google Books)
 - eBay pricing and sales data analysis
 - Terapeak historical sales integration
 - Amazon Best Seller Rank evaluation
 - Instant price checking with auto-reject for low-value books
 - Progressive Web App (PWA) for mobile use
+
+## Book Information Fallback System
+
+The app uses a robust fallback system for retrieving book information:
+
+1. **Primary Source**: ISBNdb API - Provides comprehensive book details including cover images, publisher info, and dimensions
+2. **Fallback Source**: Google Books API - Used when ISBNdb fails or returns no data
+3. **Automatic Switching**: The system automatically tries Google Books if ISBNdb is unavailable or returns an error
+
+This ensures reliable book information retrieval even when one API service is down or has rate limiting issues.
 
 ## Development Setup
 
@@ -79,12 +89,16 @@ A progressive web app for book sourcing and analysis to help with book reselling
 3. Create `.env` file in the server directory with your API keys:
    ```
    ISBNDB_API_KEY=your_key_here
+   GOOGLE_BOOKS_API_KEY=your_key_here  # Optional - for higher rate limits
    EBAY_APP_ID=your_key_here
    EBAY_CERT_ID=your_key_here
    EBAY_DEV_ID=your_key_here
    EBAY_REDIRECT_URI=your_uri_here
    EBAY_MARKETPLACE_ID=EBAY_AU
    ```
+
+**Note**: The Google Books API key is completely optional! The fallback system works without it, just with lower rate limits (1 request per second vs 1,000 requests per 100 seconds with an API key).
+
 4. Start the backend server:
    ```
    cd server
@@ -119,13 +133,16 @@ This app is configured for deployment on Render using the provided `render.yaml`
 
 Make sure to set these environment variables for the backend service in Render:
 
-- `ISBNDB_API_KEY`: Your ISBN database API key
+- `ISBNDB_API_KEY`: Your ISBN database API key (required)
+- `GOOGLE_BOOKS_API_KEY`: Your Google Books API key (optional - for higher rate limits)
 - `EBAY_APP_ID`: Your eBay App ID
 - `EBAY_CERT_ID`: Your eBay Cert ID
 - `EBAY_DEV_ID`: Your eBay Dev ID
 - `EBAY_REDIRECT_URI`: Your eBay redirect URI
 - `EBAY_MARKETPLACE_ID`: EBAY_AU (for Australia)
 - `NODE_ENV`: production
+
+**Note**: The Google Books API key is completely optional! The fallback system works without it, just with lower rate limits.
 
 ## Accessing the App
 

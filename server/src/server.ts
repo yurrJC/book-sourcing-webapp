@@ -6,7 +6,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import { calculateSourcingVerdict, MOCK_SCENARIOS } from './sourcing-engine'; // Import backend engine
 import { SourcingResult } from './types'; // Import backend types
-import { getBookDetailsFromIsbnDb } from './isbnDbClient'; // Import the ISBNdb client
+import { getBookDetails } from './bookService'; // Import the unified book service
 import ebayRoutes from './routes/ebay'; // Import eBay routes
 
 const app = express();
@@ -28,7 +28,7 @@ app.use('/api', ebayRoutes);
 
 // --- API Endpoints ---
 
-// Updated search endpoint using backend sourcing engine AND ISBNdb lookup
+// Updated search endpoint using backend sourcing engine AND unified book lookup with fallback
 app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
   const isbn = req.query.isbn as string;
   // TODO: Later, we might get scenario from query params or other source for testing
@@ -50,10 +50,9 @@ app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
   }
 
   try {
-    // --- Call ISBNdb API --- 
-    // We can run this concurrently with the sourcing calculation if desired
-    // Or sequentially if sourcing logic might depend on book details (e.g., weight)
-    const bookDetailsResult = await getBookDetailsFromIsbnDb(isbn);
+    // --- Call unified book service with fallback logic --- 
+    // This will try ISBNdb first, then Google Books if ISBNdb fails
+    const bookDetailsResult = await getBookDetails(isbn);
     
     // --- Call the backend sourcing logic (still using mock scenario for prices/sales) --- 
     const sourcingResult: SourcingResult = await calculateSourcingVerdict(isbn, scenarioKey);
@@ -61,7 +60,7 @@ app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
     // --- Combine results and Send back to the frontend --- 
     const finalResult: SourcingResult = {
       ...sourcingResult, // Spread the results from the sourcing engine
-      bookDetails: bookDetailsResult ? bookDetailsResult.book : null // Add the fetched book details
+      bookDetails: bookDetailsResult // Add the fetched book details (now includes source info)
     };
 
     res.json(finalResult); 

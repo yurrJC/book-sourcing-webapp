@@ -14,7 +14,7 @@ export interface SourcingResult {
     p_AZ?: number | null;
   };
   metrics: SourcingResultMetrics;
-  /** Details fetched from ISBNdb or similar source */
+  /** Details fetched from ISBNdb, Google Books, or similar source */
   bookDetails?: {
     title?: string;
     authors?: string[];
@@ -24,7 +24,8 @@ export interface SourcingResult {
     pages?: number;
     date_published?: string;
     dimensions?: string;
-    // Add any other relevant fields from IsbnDbBook.book
+    source?: 'isbndb' | 'googlebooks'; // Track which API provided the data
+    // Add any other relevant fields from book APIs
   } | null;
 }
 

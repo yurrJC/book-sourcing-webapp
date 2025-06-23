@@ -2129,6 +2129,24 @@ function App() {
                     <span className="label">ISBN:</span> 
                     <span className="value">{isbn}</span>
                   </p>
+                  {searchResult?.bookDetails?.source && (
+                    <p className="book-source">
+                      <span className="label">Source:</span> 
+                      <span className="value">
+                        {searchResult.bookDetails.source === 'isbndb' ? 'ISBNdb' : 'Google Books'}
+                        {searchResult.bookDetails.source === 'googlebooks' && (
+                          <span style={{ 
+                            fontSize: '11px', 
+                            color: '#666', 
+                            marginLeft: '4px',
+                            fontStyle: 'italic'
+                          }}>
+                            (fallback)
+                          </span>
+                        )}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
