@@ -1282,6 +1282,8 @@ function App() {
   const [activeInput, setActiveInput] = useState<string | null>(null);
   // Add state for front page keyboard
   const [frontPageKeyboardVisible, setFrontPageKeyboardVisible] = useState(false);
+  // Add ref for quick scan input
+  const quickScanInputRef = useRef<HTMLInputElement>(null);
 
   // Define eBay fees constant inside the App component
   const EBAY_FEES = 0.15; // Set to 15%
@@ -1622,11 +1624,16 @@ function App() {
   const handleNewScan = () => {
     // Clear only the book-specific data, keep manual inputs
     setSearchResult(null);
-    setIsbn('');
+    setIsbn(''); // Clear the ISBN field so quick scan input is blank
     setLowestListedPrice(null);
     // Keep manual input fields populated for faster data entry
     // Keep: lowestActivePrice, recentSoldPrice, terapeakSales, amazonBSR, amazonReviews
     // Keep: minPriceThreshold, isInstantRejectEnabled
+    
+    // Focus the quick scan input for immediate barcode scanning
+    setTimeout(() => {
+      quickScanInputRef.current?.focus();
+    }, 100);
   };
 
   // Function to clear all data including manual inputs
@@ -2219,6 +2226,7 @@ function App() {
             {/* Quick ISBN input for immediate scanning */}
             <div className="quick-isbn-input">
               <input
+                ref={quickScanInputRef}
                 type="text"
                 placeholder="Enter next ISBN here..."
                 value={isbn}
