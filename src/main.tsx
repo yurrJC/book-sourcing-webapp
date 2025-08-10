@@ -284,6 +284,32 @@ const amazonSectionStyles = `
   font-size: 1rem !important;
   width: 100%;
   max-width: 150px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.price-input.valid {
+  border-color: #34a853 !important;
+  box-shadow: 0 0 0 1px #34a853;
+}
+
+.price-input.invalid {
+  border-color: #ea4335 !important;
+  box-shadow: 0 0 0 1px #ea4335;
+}
+
+.price-helper-text {
+  font-size: 0.8rem;
+  color: #70757a;
+  margin-top: 0.4rem;
+  font-style: italic;
+}
+
+.price-helper-text.valid {
+  color: #34a853;
+}
+
+.price-helper-text.invalid {
+  color: #ea4335;
 }
 
 .checkbox-container {
@@ -305,13 +331,6 @@ const amazonSectionStyles = `
   font-weight: 500;
   cursor: pointer;
   font-size: 0.95rem;
-}
-
-.price-helper-text {
-  font-size: 0.8rem;
-  color: #70757a;
-  margin-top: 0.4rem;
-  font-style: italic;
 }
 
 .app-container {
@@ -1127,6 +1146,37 @@ const amazonSectionStyles = `
     margin-top: 24px;
   }
 }
+
+.price-helper-text.invalid {
+  color: #ea4335;
+}
+
+.price-comparison {
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+}
+
+.price-comparison.above-threshold {
+  background-color: #e6f4ea;
+  color: #137333;
+  border: 1px solid #34a853;
+}
+
+.price-comparison.below-threshold {
+  background-color: #fce8e6;
+  color: #c5221f;
+  border: 1px solid #ea4335;
+}
+
+.percentage-difference {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  opacity: 0.8;
+}
 `;
 
 // Define types for our mock data
@@ -1214,7 +1264,7 @@ function App() {
   const [amazonBSR, setAmazonBSR] = useState<string>('');
   const [amazonReviews, setAmazonReviews] = useState<string>('');
   // Add state for instant reject
-  const [minPriceThreshold, setMinPriceThreshold] = useState("15.00");
+  const [minPriceThreshold, setMinPriceThreshold] = useState<number>(15.00);
   const [isInstantRejectEnabled, setIsInstantRejectEnabled] = useState(true);
   // Reinstate removed state variables needed for price checking
   const [_isCheckingLowestPrice, setIsCheckingLowestPrice] = useState<boolean>(false);
@@ -1253,10 +1303,11 @@ function App() {
       setAmazonReviews(prev => prev + value);
     } else if (activeInput === 'min-price-threshold') {
       // Handle decimal point specially for price input
-      if (value === '.' && minPriceThreshold.includes('.')) {
+      if (value === '.' && minPriceThreshold.toString().includes('.')) {
         return; // Don't allow multiple decimal points
       }
-      setMinPriceThreshold(prev => prev + value);
+      const newValue = parseFloat((minPriceThreshold.toString() + value)) || 0;
+      setMinPriceThreshold(newValue);
     }
   };
 
@@ -1276,7 +1327,9 @@ function App() {
     } else if (activeInput === 'amazon-reviews') {
       setAmazonReviews(prev => prev.slice(0, -1));
     } else if (activeInput === 'min-price-threshold') {
-      setMinPriceThreshold(prev => prev.slice(0, -1));
+      const currentStr = minPriceThreshold.toString();
+      const newValue = parseFloat(currentStr.slice(0, -1)) || 0;
+      setMinPriceThreshold(newValue);
     }
   };
 
@@ -1296,31 +1349,45 @@ function App() {
     } else if (activeInput === 'amazon-reviews') {
       setAmazonReviews('');
     } else if (activeInput === 'min-price-threshold') {
-      setMinPriceThreshold('');
+      setMinPriceThreshold(0);
     }
   };
 
-  // Function to add decimal point
+  // Function to handle decimal point input
   const handleDecimalPoint = () => {
-    if (!activeInput || activeInput !== 'min-price-threshold') return;
+    if (!activeInput) return;
     
-    // Only add decimal if it doesn't already exist
-    if (!minPriceThreshold.includes('.')) {
-      // If empty, add 0 before decimal
-      if (minPriceThreshold === '') {
-        setMinPriceThreshold('0.');
-      } else {
-        setMinPriceThreshold(prev => prev + '.');
+    if (activeInput === 'min-price-threshold') {
+      if (!minPriceThreshold.toString().includes('.')) {
+        if (minPriceThreshold === 0) {
+          setMinPriceThreshold(0.1);
+        } else {
+          setMinPriceThreshold(prev => prev + 0.1);
+        }
       }
     }
   };
 
-  // Convert string to number for validation and searches
+  // Function to validate price threshold
+  const validatePriceThreshold = (threshold: number): { isValid: boolean; message: string } => {
+    if (threshold <= 0) {
+      return { isValid: false, message: "Price threshold must be greater than $0" };
+    }
+    if (threshold < 5) {
+      return { isValid: false, message: "Price threshold below $5 may reject too many books" };
+    }
+    if (threshold > 100) {
+      return { isValid: false, message: "Price threshold above $100 may be too restrictive" };
+    }
+    return { isValid: true, message: "Price threshold is valid" };
+  };
+
+  // Function to get numeric threshold with validation
   const getNumericThreshold = (): number => {
-    if (minPriceThreshold === '' || isNaN(parseFloat(minPriceThreshold))) {
+    if (minPriceThreshold <= 0 || isNaN(minPriceThreshold)) {
       return MIN_PRICE_THRESHOLD;
     }
-    return parseFloat(minPriceThreshold);
+    return minPriceThreshold;
   };
 
   // Scroll to top when search results appear OR calculation finishes
@@ -1484,6 +1551,13 @@ function App() {
       
       // If instant reject is enabled, check eBay for lowest price
       if (isInstantRejectEnabled && result.bookDetails) {
+        // Validate the price threshold first
+        const thresholdValidation = validatePriceThreshold(getNumericThreshold());
+        if (!thresholdValidation.isValid) {
+          console.warn(`Price threshold validation failed: ${thresholdValidation.message}`);
+          // Continue with the search but log the warning
+        }
+        
         const title = result.bookDetails.title 
           ? result.bookDetails.title.split(':')[0].trim() 
           : '';
@@ -1498,16 +1572,20 @@ function App() {
           
           // If price is below threshold, update verdict with instant reject
           if (lowestPrice !== null && lowestPrice < getNumericThreshold()) {
+            const threshold = getNumericThreshold();
+            const priceDifference = threshold - lowestPrice;
             const updatedVerdict: SourcingVerdict = {
               ...initialVerdict,
               verdict: "REJECT",
               decidingStage: -1, // Special stage for instant reject
-              decidingReason: `INSTANT REJECT: Lowest price on eBay AU is $${lowestPrice.toFixed(2)}, which is below your threshold of $${getNumericThreshold().toFixed(2)}.`
+              decidingReason: `INSTANT REJECT: Lowest price on eBay AU is $${lowestPrice.toFixed(2)}, which is $${priceDifference.toFixed(2)} below your threshold of $${threshold.toFixed(2)}. This book is priced too low to be profitable.`
             };
             
             setSearchResult(updatedVerdict);
+            console.log(`Instant reject applied: $${lowestPrice.toFixed(2)} < $${threshold.toFixed(2)} (threshold)`);
           } else if (lowestPrice !== null) {
-            console.log(`Book passes price threshold check: $${lowestPrice.toFixed(2)} >= $${getNumericThreshold().toFixed(2)}`);
+            const threshold = getNumericThreshold();
+            console.log(`Book passes price threshold check: $${lowestPrice.toFixed(2)} >= $${threshold.toFixed(2)}`);
           }
         } else {
           console.warn('Missing title or author for eBay price check');
@@ -1792,6 +1870,15 @@ function App() {
   function renderMetricsBanner(activeCount: number, soldCount: number, str: number, teapeakSales: number | null, lowestPrice: number | null, _verdict: string, finalProbability: number | null, _stage: string, basePrice: number | null, shippingCost: number | null, itemCondition: string | null, usedCount: number, newCount: number) {
     const profit = lowestPrice !== null && basePrice !== null ? (lowestPrice * (1 - EBAY_FEES)) - (shippingCost || 0) - basePrice : null;
     const roi = profit !== null && basePrice !== null && basePrice > 0 ? (profit / basePrice) * 100 : null;
+    
+    // Calculate price comparison with threshold
+    const threshold = getNumericThreshold();
+    const priceComparison = lowestPrice !== null ? {
+      isAboveThreshold: lowestPrice >= threshold,
+      difference: Math.abs(lowestPrice - threshold),
+      percentage: ((lowestPrice - threshold) / threshold) * 100
+    } : null;
+    
     return (
       <div className="metrics-banner">
         {lowestPrice && (
@@ -1804,6 +1891,14 @@ function App() {
             <div className="inventory-counts">
               In Australia: {usedCount} used, {newCount} new
             </div>
+            {priceComparison && (
+              <div className={`price-comparison ${priceComparison.isAboveThreshold ? 'above-threshold' : 'below-threshold'}`}>
+                {priceComparison.isAboveThreshold ? '✓' : '✗'} ${priceComparison.difference.toFixed(2)} {priceComparison.isAboveThreshold ? 'above' : 'below'} threshold (${threshold.toFixed(2)})
+                <div className="percentage-difference">
+                  {priceComparison.percentage > 0 ? '+' : ''}{priceComparison.percentage.toFixed(1)}%
+                </div>
+              </div>
+            )}
           </div>
         )}
         
@@ -1914,8 +2009,11 @@ function App() {
                         id="min-price-threshold"
                         type="text"
                         value={minPriceThreshold}
-                        onChange={(e) => setMinPriceThreshold(e.target.value)}
-                        className="price-input"
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value) || 0;
+                          setMinPriceThreshold(value);
+                        }}
+                        className={`price-input ${validatePriceThreshold(minPriceThreshold).isValid ? 'valid' : 'invalid'}`}
                         disabled={!isInstantRejectEnabled}
                         readOnly={isInstantRejectEnabled}
                         onFocus={() => {
@@ -1926,8 +2024,8 @@ function App() {
                         }}
                       />
                     </div>
-                    <div className="price-helper-text">
-                      Books priced below this threshold will be automatically rejected
+                    <div className={`price-helper-text ${validatePriceThreshold(minPriceThreshold).isValid ? 'valid' : 'invalid'}`}>
+                      {validatePriceThreshold(minPriceThreshold).message}
                     </div>
                   </div>
                 </div>
@@ -2093,6 +2191,12 @@ function App() {
                 )}
                 {' '}&bull;{' '}
                 Threshold: <span className="threshold-value">{(STR_THRESHOLD * 100).toFixed(1)}%</span>
+                {isInstantRejectEnabled && (
+                  <>
+                    {' '}&bull;{' '}
+                    Price Threshold: <span className="price-threshold-value">${getNumericThreshold().toFixed(2)}</span>
+                  </>
+                )}
               </div>
             </div>
             

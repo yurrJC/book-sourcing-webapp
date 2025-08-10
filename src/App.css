@@ -235,6 +235,11 @@ input:focus, select:focus {
   color: rgba(255, 255, 255, 0.8);
 }
 
+.price-threshold-value {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 600;
+}
+
 /* Metrics Banner */
 .metrics-banner {
   display: grid;

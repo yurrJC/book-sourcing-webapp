@@ -140,10 +140,20 @@ export async function findLowestPrice(searchTerm: string, isbn: string): Promise
         const isPhysicalBook = !title.includes('audiobook') && 
                !title.includes('audio book') && 
                !title.includes('audio cd') &&
+               !title.includes('cd') &&
+               !title.includes('dvd') &&
+               !title.includes('blu-ray') &&
                !title.includes('mp3') &&
                !title.includes('ebook') && 
                !title.includes('e-book') &&
-               !title.includes('kindle');
+               !title.includes('kindle') &&
+               !title.includes('digital') &&
+               !title.includes('download') &&
+               !title.includes('streaming') &&
+               !title.includes('audio cassette') &&
+               !title.includes('cassette') &&
+               !title.includes('vinyl') &&
+               !title.includes('record');
         
         // Double check the item is located in Australia
         const isInAustralia = item.itemLocation && 
@@ -189,22 +199,64 @@ export async function findLowestPrice(searchTerm: string, isbn: string): Promise
       
       // Calculate total price including shipping for each item
       const itemsWithTotalPrice = filteredItems.map((item: any) => {
+        // Debug logging for shipping information
+        console.log(`Processing item: "${item.title}"`);
+        console.log(`  - Base price: $${item.price.value}`);
+        console.log(`  - Shipping field:`, item.shipping);
+        console.log(`  - ShippingOptions field:`, item.shippingOptions);
+        
         const basePrice = parseFloat(item.price.value);
-        const shippingCost = item.shippingOptions && 
-                             item.shippingOptions[0] && 
-                             item.shippingOptions[0].shippingCost ? 
-                             parseFloat(item.shippingOptions[0].shippingCost.value) : 0;
+        
+        // Check for shipping cost in the correct field structure
+        let shippingCost = 0;
+        if (item.shipping && item.shipping.shippingCost) {
+          const shippingValue = item.shipping.shippingCost.value;
+          if (shippingValue && shippingValue !== '0.00' && shippingValue !== '0') {
+            shippingCost = parseFloat(shippingValue);
+            if (isNaN(shippingCost)) {
+              console.log(`  - Warning: Invalid shipping cost value: "${shippingValue}", setting to 0`);
+              shippingCost = 0;
+            }
+          }
+        } else if (item.shippingOptions && item.shippingOptions[0] && item.shippingOptions[0].shippingCost) {
+          // Fallback to shippingOptions if shipping field doesn't exist
+          const shippingValue = item.shippingOptions[0].shippingCost.value;
+          if (shippingValue && shippingValue !== '0.00' && shippingValue !== '0') {
+            shippingCost = parseFloat(shippingValue);
+            if (isNaN(shippingCost)) {
+              console.log(`  - Warning: Invalid shipping cost value: "${shippingValue}", setting to 0`);
+              shippingCost = 0;
+            }
+          }
+        }
+        
+        // Check if shipping is free (common for books)
+        const isFreeShipping = shippingCost === 0 || 
+                              (item.shipping && item.shipping.shippingCost && 
+                               (item.shipping.shippingCost.value === '0.00' || item.shipping.shippingCost.value === '0')) ||
+                              (item.shippingOptions && item.shippingOptions[0] && 
+                               item.shippingOptions[0].shippingCost && 
+                               (item.shippingOptions[0].shippingCost.value === '0.00' || item.shippingOptions[0].shippingCost.value === '0'));
         
         return {
           ...item,
           totalPrice: basePrice + shippingCost,
           basePrice: basePrice,
-          shippingCost: shippingCost
+          shippingCost: shippingCost,
+          isFreeShipping: isFreeShipping
         };
       });
       
-      // Sort by total price
-      itemsWithTotalPrice.sort((a: any, b: any) => a.totalPrice - b.totalPrice);
+      // Sort by total price, with free shipping as a tiebreaker
+      itemsWithTotalPrice.sort((a: any, b: any) => {
+        const priceDiff = a.totalPrice - b.totalPrice;
+        if (Math.abs(priceDiff) < 0.01) { // If prices are essentially equal (within 1 cent)
+          // Prefer free shipping
+          if (a.isFreeShipping && !b.isFreeShipping) return -1;
+          if (!a.isFreeShipping && b.isFreeShipping) return 1;
+        }
+        return priceDiff;
+      });
       
       // Get the lowest priced item
       const lowestPricedItem = itemsWithTotalPrice[0];
@@ -212,13 +264,15 @@ export async function findLowestPrice(searchTerm: string, isbn: string): Promise
       const lowestShippingCost = lowestPricedItem.shippingCost;
       const lowestTotalPrice = lowestPricedItem.totalPrice;
       
-      console.log(`Lowest total price: $${lowestTotalPrice.toFixed(2)} (Base: $${lowestBasePrice.toFixed(2)}, Shipping: $${lowestShippingCost.toFixed(2)}) for item "${lowestPricedItem.title}"`);
+      const shippingInfo = lowestPricedItem.isFreeShipping ? 'FREE' : `$${lowestShippingCost.toFixed(2)}`;
+      console.log(`Lowest total price: $${lowestTotalPrice.toFixed(2)} (Base: $${lowestBasePrice.toFixed(2)}, Shipping: ${shippingInfo}) for item "${lowestPricedItem.title}"`);
       
       // Return price and counts
       return {
         lowestPrice: lowestTotalPrice,
         basePrice: lowestBasePrice,
         shippingCost: lowestShippingCost,
+        isFreeShipping: lowestPricedItem.isFreeShipping,
         condition: lowestPricedItem.condition || 'Not specified',
         usedCount,
         newCount
@@ -298,10 +352,21 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
         const isPhysicalBook = !title.includes('audiobook') && 
                !title.includes('audio book') && 
                !title.includes('audio cd') &&
+               !title.includes('audio cd') &&
+               !title.includes('cd') &&
+               !title.includes('dvd') &&
+               !title.includes('blu-ray') &&
                !title.includes('mp3') &&
                !title.includes('ebook') && 
                !title.includes('e-book') &&
-               !title.includes('kindle');
+               !title.includes('kindle') &&
+               !title.includes('digital') &&
+               !title.includes('download') &&
+               !title.includes('streaming') &&
+               !title.includes('audio cassette') &&
+               !title.includes('cassette') &&
+               !title.includes('vinyl') &&
+               !title.includes('record');
         
         // Double check the item is located in Australia
         const isInAustralia = item.itemLocation && 
@@ -327,21 +392,43 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
       // Calculate total price including shipping for each item
       const itemsWithTotalPrice = filteredItems.map((item: any) => {
         const basePrice = parseFloat(item.price.value);
-        const shippingCost = item.shippingOptions && 
-                             item.shippingOptions[0] && 
-                             item.shippingOptions[0].shippingCost ? 
-                             parseFloat(item.shippingOptions[0].shippingCost.value) : 0;
+        
+        // Check for shipping cost in the correct field structure
+        let shippingCost = 0;
+        if (item.shipping && item.shipping.shippingCost) {
+          shippingCost = parseFloat(item.shipping.shippingCost.value);
+        } else if (item.shippingOptions && item.shippingOptions[0] && item.shippingOptions[0].shippingCost) {
+          // Fallback to shippingOptions if shipping field doesn't exist
+          shippingCost = parseFloat(item.shippingOptions[0].shippingCost.value);
+        }
+        
+        // Check if shipping is free (common for books)
+        const isFreeShipping = shippingCost === 0 || 
+                              (item.shipping && item.shipping.shippingCost && 
+                               item.shipping.shippingCost.value === '0.00') ||
+                              (item.shippingOptions && item.shippingOptions[0] && 
+                               item.shippingOptions[0].shippingCost && 
+                               item.shippingOptions[0].shippingCost.value === '0.00');
         
         return {
           ...item,
           totalPrice: basePrice + shippingCost,
           basePrice: basePrice,
-          shippingCost: shippingCost
+          shippingCost: shippingCost,
+          isFreeShipping: isFreeShipping
         };
       });
       
-      // Sort by total price
-      itemsWithTotalPrice.sort((a: any, b: any) => a.totalPrice - b.totalPrice);
+      // Sort by total price, with free shipping as a tiebreaker
+      itemsWithTotalPrice.sort((a: any, b: any) => {
+        const priceDiff = a.totalPrice - b.totalPrice;
+        if (Math.abs(priceDiff) < 0.01) { // If prices are essentially equal (within 1 cent)
+          // Prefer free shipping
+          if (a.isFreeShipping && !b.isFreeShipping) return -1;
+          if (!a.isFreeShipping && b.isFreeShipping) return 1;
+        }
+        return priceDiff;
+      });
       
       // Return the full details for debugging
       const items = itemsWithTotalPrice;
@@ -351,6 +438,7 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
         lowestPrice: items.length > 0 ? items[0].totalPrice : null,
         basePrice: items.length > 0 ? items[0].basePrice : null,
         shippingCost: items.length > 0 ? items[0].shippingCost : null,
+        isFreeShipping: items.length > 0 ? items[0].isFreeShipping : null,
         condition: items.length > 0 ? items[0].condition : null,
         itemCount: filteredItems.length,
         usedCount,
@@ -362,6 +450,7 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
           price: item.totalPrice,
           basePrice: item.basePrice,
           shippingCost: item.shippingCost,
+          isFreeShipping: item.isFreeShipping,
           condition: item.condition,
           sellerId: item.seller?.username || 'unknown',
           itemUrl: item.itemWebUrl || '#',
@@ -373,12 +462,13 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
           price: item.totalPrice,
           basePrice: item.basePrice,
           shippingCost: item.shippingCost,
+          isFreeShipping: item.isFreeShipping,
           condition: item.condition,
           sellerId: item.seller?.username || 'unknown',
           itemUrl: item.itemWebUrl || '#',
           location: item.itemLocation ? `${item.itemLocation.city || ''}, ${item.itemLocation.stateOrProvince || ''}, ${item.itemLocation.country || 'AU'}` : 'Australia'
         })),
-        excludedFormats: ['audiobook', 'audio book', 'ebook', 'e-book', 'kindle', 'audio cd', 'mp3']
+        excludedFormats: ['audiobook', 'audio book', 'ebook', 'e-book', 'kindle', 'audio cd', 'cd', 'dvd', 'blu-ray', 'mp3', 'digital', 'download', 'streaming', 'audio cassette', 'cassette', 'vinyl', 'record']
       };
     }
     
@@ -390,7 +480,7 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
       newCount: 0,
       totalBeforeFiltering: response.data?.itemSummaries?.length || 0,
       topItems: [],
-      excludedFormats: ['audiobook', 'audio book', 'ebook', 'e-book', 'kindle', 'audio cd', 'mp3']
+      excludedFormats: ['audiobook', 'audio book', 'ebook', 'e-book', 'kindle', 'audio cd', 'cd', 'dvd', 'blu-ray', 'mp3', 'digital', 'download', 'streaming', 'audio cassette', 'cassette', 'vinyl', 'record']
     };
   } catch (error) {
     console.error('Error searching eBay for lowest price details:', error);
