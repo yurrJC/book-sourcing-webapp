@@ -1284,6 +1284,8 @@ function App() {
   const [frontPageKeyboardVisible, setFrontPageKeyboardVisible] = useState(false);
   // Add ref for quick scan input
   const quickScanInputRef = useRef<HTMLInputElement>(null);
+  // Add state for quick scan input (separate from main ISBN state)
+  const [quickScanIsbn, setQuickScanIsbn] = useState('');
 
   // Define eBay fees constant inside the App component
   const EBAY_FEES = 0.15; // Set to 15%
@@ -1497,15 +1499,32 @@ function App() {
 
   const handleSearch = async (e: FormEvent) => {
     e.preventDefault();
+    
+    // Use quick scan input if available, otherwise use main ISBN input
+    const isbnToSearch = quickScanIsbn.trim() || isbn.trim();
+    
+    if (!isbnToSearch) {
+      setError('Please enter an ISBN');
+      return;
+    }
+
     setLoading(true);
-    setError(null);
-    setSearchResult(null); // Clear previous results on new search
-    setLowestListedPrice(null); // Reset lowest price
+    setError('');
+    setSearchResult(null);
+    setLowestListedPrice(null);
     
     try {
+      // Set the main ISBN state to the searched ISBN
+      setIsbn(isbnToSearch);
+      
+      // Clear the quick scan input for the next scan
+      setQuickScanIsbn('');
+      
+      console.log('Searching for ISBN:', isbnToSearch);
+      
       // --- Call the backend API to fetch book details only --- 
       // Use the environment variable for the API URL
-      const apiUrl = `${import.meta.env.VITE_API_URL}/api/search?isbn=${encodeURIComponent(isbn)}&scenario=${encodeURIComponent(selectedScenario)}`;
+      const apiUrl = `${import.meta.env.VITE_API_URL}/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=${encodeURIComponent(selectedScenario)}`;
       console.log(`(Frontend) Calling API: ${apiUrl}`);
       const response = await fetch(apiUrl);
 
@@ -1570,7 +1589,7 @@ function App() {
         console.log(`Checking eBay price for "${title}" by "${author}"`);
         
         if (title && author) {
-          const lowestPrice = await checkEbayLowestPrice(isbn, title, author);
+          const lowestPrice = await checkEbayLowestPrice(isbnToSearch, title, author);
           
           // If price is below threshold, update verdict with instant reject
           if (lowestPrice !== null && lowestPrice < getNumericThreshold()) {
@@ -1624,7 +1643,8 @@ function App() {
   const handleNewScan = () => {
     // Clear only the book-specific data, keep manual inputs
     setSearchResult(null);
-    setIsbn(''); // Clear the ISBN field so quick scan input is blank
+    setIsbn(''); // Clear the main ISBN field
+    setQuickScanIsbn(''); // Clear the quick scan input field
     setLowestListedPrice(null);
     // Keep manual input fields populated for faster data entry
     // Keep: lowestActivePrice, recentSoldPrice, terapeakSales, amazonBSR, amazonReviews
@@ -1640,6 +1660,7 @@ function App() {
   const handleClearAll = () => {
     setSearchResult(null);
     setIsbn('');
+    setQuickScanIsbn(''); // Clear the quick scan input as well
     setLowestListedPrice(null);
     // Clear all manual input fields
     setLowestActivePrice('');
@@ -2229,10 +2250,10 @@ function App() {
                 ref={quickScanInputRef}
                 type="text"
                 placeholder="Enter next ISBN here..."
-                value={isbn}
-                onChange={(e) => setIsbn(e.target.value)}
+                value={quickScanIsbn}
+                onChange={(e) => setQuickScanIsbn(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && isbn.trim()) {
+                  if (e.key === 'Enter' && quickScanIsbn.trim()) {
                     handleSearch(e as any);
                   }
                 }}
@@ -2241,11 +2262,11 @@ function App() {
               <button 
                 className="quick-search-btn"
                 onClick={(e) => {
-                  if (isbn.trim()) {
+                  if (quickScanIsbn.trim()) {
                     handleSearch(e as any);
                   }
                 }}
-                disabled={!isbn.trim()}
+                disabled={!quickScanIsbn.trim()}
               >
                 🔍
               </button>
