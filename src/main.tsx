@@ -2206,6 +2206,44 @@ function App() {
       ) : (
         <div className="results-container">
           <style>{amazonSectionStyles}</style>
+          
+          {/* Quick Scan Button at the very top */}
+          <div className="quick-scan-header">
+            <button 
+              className="quick-scan-button"
+              onClick={handleNewScan}
+            >
+              📖 Quick Scan
+            </button>
+            
+            {/* Quick ISBN input for immediate scanning */}
+            <div className="quick-isbn-input">
+              <input
+                type="text"
+                placeholder="Enter next ISBN here..."
+                value={isbn}
+                onChange={(e) => setIsbn(e.target.value)}
+                onKeyPress={(e) => {
+                  if (e.key === 'Enter' && isbn.trim()) {
+                    handleSearch(e as any);
+                  }
+                }}
+                className="quick-isbn-field"
+              />
+              <button 
+                className="quick-search-btn"
+                onClick={(e) => {
+                  if (isbn.trim()) {
+                    handleSearch(e as any);
+                  }
+                }}
+                disabled={!isbn.trim()}
+              >
+                🔍
+              </button>
+            </div>
+          </div>
+          
           <div className="results-content-wrapper">
             <div ref={topRef} className={`verdict-banner ${searchResult.verdict === "BUY" ? "buy" : searchResult.verdict === "REJECT" ? "reject" : "check"}`}>
               <div className="verdict-label">{searchResult.verdict}</div>
