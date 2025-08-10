@@ -1618,6 +1618,32 @@ function App() {
     setLowestListedPrice(null);
   };
 
+  // New function for starting a new scan while keeping manual inputs
+  const handleNewScan = () => {
+    // Clear only the book-specific data, keep manual inputs
+    setSearchResult(null);
+    setIsbn('');
+    setLowestListedPrice(null);
+    // Keep manual input fields populated for faster data entry
+    // Keep: lowestActivePrice, recentSoldPrice, terapeakSales, amazonBSR, amazonReviews
+    // Keep: minPriceThreshold, isInstantRejectEnabled
+  };
+
+  // Function to clear all data including manual inputs
+  const handleClearAll = () => {
+    setSearchResult(null);
+    setIsbn('');
+    setLowestListedPrice(null);
+    // Clear all manual input fields
+    setLowestActivePrice('');
+    setRecentSoldPrice('');
+    setTerapeakSales('');
+    setAmazonBSR('');
+    setAmazonReviews('');
+    setMinPriceThreshold(15.00);
+    setIsInstantRejectEnabled(true);
+  };
+
   const calculateCombinedVerdict = () => {
     // Ensure searchResult exists and has bookDetails before proceeding
     if (!searchResult || !searchResult.bookDetails) return;
@@ -2201,12 +2227,23 @@ function App() {
             </div>
             
             <div className="scan-again-container-top">
-              <button 
-                className="scan-again-button-large"
-                onClick={handleScanAgain}
-              >
-                SCAN
-              </button>
+              <div className="button-row">
+                <button 
+                  className="scan-again-button-large"
+                  onClick={handleNewScan}
+                >
+                  📖 New Scan
+                </button>
+                <button 
+                  className="clear-all-button"
+                  onClick={handleClearAll}
+                >
+                  🗑️ Clear All
+                </button>
+              </div>
+              <div className="help-text">
+                "New Scan" keeps your manual inputs for faster data entry
+              </div>
             </div>
             
             <div className="book-display-container">
