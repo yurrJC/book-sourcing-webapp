@@ -94,4 +94,61 @@ export interface SourcingVerdict {
     amazonReviews?: number | null;
     amazonPrice?: number | null;
   };
-} 
+}
+
+/**
+ * Scenario key types for testing different sourcing scenarios
+ */
+export type ScenarioKey = 'STRONG_EQUILIBRIUM' | 'WEAK_EQUILIBRIUM' | 'TERAPEAK_DOMINANT' | 'AMAZON_DOMINANT';
+
+/**
+ * Mock scenario data for testing
+ */
+export interface MockScenario {
+  description: string;
+  pricesA: number[];
+  pricesS: number[];
+  terapeak_T: number;
+  pricesA_condition: string[];
+  amazonPrice: number;
+  amazonRank: number;
+}
+
+export const MOCK_SCENARIOS: Record<ScenarioKey, MockScenario> = {
+  STRONG_EQUILIBRIUM: {
+    description: 'Strong equilibrium with good STR',
+    pricesA: [25, 30, 35, 40, 45],
+    pricesS: [20, 25, 30, 35],
+    terapeak_T: 12,
+    pricesA_condition: ['used', 'used', 'used', 'used', 'used'],
+    amazonPrice: 32.50,
+    amazonRank: 150000
+  },
+  WEAK_EQUILIBRIUM: {
+    description: 'Weak equilibrium with poor STR',
+    pricesA: [15, 20, 25, 30, 35],
+    pricesS: [10, 15, 20],
+    terapeak_T: 3,
+    pricesA_condition: ['used', 'used', 'used', 'used', 'used'],
+    amazonPrice: 25.00,
+    amazonRank: 500000
+  },
+  TERAPEAK_DOMINANT: {
+    description: 'High Terapeak sales, moderate STR',
+    pricesA: [20, 25, 30, 35],
+    pricesS: [18, 22, 28],
+    terapeak_T: 25,
+    pricesA_condition: ['used', 'used', 'used', 'used'],
+    amazonPrice: 27.50,
+    amazonRank: 300000
+  },
+  AMAZON_DOMINANT: {
+    description: 'High Amazon rank, low competition',
+    pricesA: [30, 35, 40],
+    pricesS: [25, 30, 35],
+    terapeak_T: 8,
+    pricesA_condition: ['used', 'used', 'used'],
+    amazonPrice: 45.00,
+    amazonRank: 50000
+  }
+}; 

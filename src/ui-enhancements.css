@@ -62,6 +62,595 @@ h1 {
   margin: 0;
 }
 
+/* Compact Layout Styles */
+.compact-layout {
+  padding: 15px;
+  max-height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Quick Scan Component */
+.quick-scan-component {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.quick-scan-button {
+  background: rgba(255, 255, 255, 0.9);
+  color: #28a745;
+  border: none;
+  border-radius: 25px;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.quick-scan-button:hover {
+  background: white;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4);
+}
+
+.quick-isbn-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 8px 15px;
+  border-radius: 25px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border: 2px solid transparent;
+  transition: all 0.3s ease;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+.quick-isbn-input:focus-within {
+  border-color: #28a745;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.2);
+}
+
+.quick-isbn-field {
+  border: none;
+  outline: none;
+  font-size: 14px;
+  width: 200px;
+  background: transparent;
+  color: #495057;
+}
+
+.quick-isbn-field::placeholder {
+  color: #adb5bd;
+  font-style: italic;
+}
+
+.quick-search-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+}
+
+.quick-search-btn:hover:not(:disabled) {
+  background: #0056b3;
+  transform: scale(1.1);
+}
+
+.quick-search-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Verdict Banner - Compact */
+.verdict-banner.compact {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  padding: 15px;
+  border-radius: 10px;
+  text-align: center;
+  border: 1px solid #dee2e6;
+}
+
+.verdict-label {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.verdict-details {
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.str-value, .threshold-value, .price-threshold-value {
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Book Information Block - Compact */
+.book-info-block {
+  display: flex;
+  gap: 20px;
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.book-cover {
+  flex-shrink: 0;
+}
+
+.book-cover img {
+  width: 80px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.placeholder-cover {
+  width: 80px;
+  height: 120px;
+  background: #f8f9fa;
+  border: 2px dashed #dee2e6;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 12px;
+  text-align: center;
+}
+
+.book-details {
+  flex: 1;
+}
+
+.book-title {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  line-height: 1.3;
+}
+
+.book-author, .book-isbn {
+  margin: 4px 0;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.book-author .label, .book-isbn .label {
+  font-weight: 600;
+  color: #495057;
+  margin-right: 8px;
+}
+
+/* Lowest Price Component */
+.lowest-price-component {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  overflow: hidden;
+}
+
+/* Action Buttons/Filters */
+.action-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.action-btn {
+  padding: 15px;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: white;
+}
+
+.action-btn.actives {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+}
+
+.action-btn.solds {
+  background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%);
+}
+
+.action-btn.terapeak {
+  background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+  color: #212529;
+}
+
+.action-btn.amazon {
+  background: linear-gradient(135deg, #fd7e14 0%, #e55a00 100%);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Calculator Section */
+.calculator-section {
+  text-align: center;
+}
+
+.calculator-btn {
+  background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 15px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calculator-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+/* Calculator Popup */
+.calculator-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.calculator-popup {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.calculator-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.calculator-header h3 {
+  margin: 0;
+  color: #212529;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6c757d;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.calculator-content {
+  color: #6c757d;
+}
+
+/* Manual Input Section - Compact */
+.manual-input-section.compact {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid #dee2e6;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.manual-input-section.compact h3 {
+  margin: 0 0 15px 0;
+  color: #212529;
+  font-size: 18px;
+}
+
+.input-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.input-field.compact {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-field.compact label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #495057;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.compact-input {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 14px;
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.compact-input:focus {
+  outline: none;
+  border-color: #007bff;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Compact Numeric Keypad */
+.compact-keypad {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  margin-bottom: 20px;
+}
+
+.keypad-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #5f6368;
+}
+
+.active-input-indicator {
+  background: #e8f0fe;
+  color: #1967d2;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: normal;
+}
+
+.keypad-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.keypad-btn {
+  padding: 8px 0;
+  background: white;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #202124;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keypad-btn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #c1c1c1;
+}
+
+.keypad-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.keypad-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.keypad-action-btn {
+  padding: 6px 0;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.keypad-action-btn.backspace {
+  background: #f1f3f4;
+  color: #5f6368;
+}
+
+.keypad-action-btn.clear {
+  background: #fef7f6;
+  color: #d93025;
+  border-color: #fadad9;
+}
+
+.keypad-action-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.keypad-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Calculate Section */
+.calculate-section {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.calculate-button {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.calculate-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.calculate-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Verdict Reason */
+.verdict-reason {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  font-size: 14px;
+  color: #495057;
+  text-align: center;
+}
+
+/* Control Buttons */
+.control-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.control-btn {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.control-btn.new-scan {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+  color: white;
+}
+
+.control-btn.clear-all {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
+}
+
+.control-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments for compact layout */
+@media (max-width: 768px) {
+  .compact-layout {
+    padding: 10px;
+    gap: 10px;
+  }
+  
+  .quick-scan-component {
+    padding: 15px;
+  }
+  
+  .book-info-block {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+  }
+  
+  .book-cover img,
+  .placeholder-cover {
+    width: 60px;
+    height: 90px;
+  }
+  
+  .input-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .action-buttons {
+    grid-template-columns: 1fr;
+  }
+  
+  .control-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Results Layout Optimization */
 .results-content-wrapper {
   max-width: 1400px;

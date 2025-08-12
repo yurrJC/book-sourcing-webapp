@@ -36,151 +36,134 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Basic App Styles */
 .App {
+  max-width: 1400px;
+  width: 95%;
   margin: 0 auto;
-  background-color: var(--surface);
+  background-color: #ffffff;
   min-height: 100vh;
-  position: relative;
+}
+
+.app-container {
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+  min-height: 100vh;
+  background-color: #f8f9fa;
 }
 
-h1 {
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0;
-  padding: 1rem 0;
-  text-align: center;
-  background-color: var(--primary);
-  color: white;
-}
-
-h2 {
-  font-size: 1.5rem;
-  font-weight: 500;
-  margin-bottom: 0.75rem;
-}
-
-h3 {
-  font-size: 1.1rem;
-  color: var(--text);
-  margin-bottom: 0.5rem;
+.content-area {
+  flex: 1;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.5rem;
-}
-
-.count {
-  background-color: var(--primary);
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.8rem;
-}
-
-.input-area {
+  justify-content: flex-start;
   padding: 1rem;
-  background-color: var(--surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  margin-bottom: 1rem;
-  max-width: 800px;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 100%;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Header */
+.scanwise-header {
+  text-align: center;
+  margin-bottom: 2rem;
+  padding: 2rem 0;
+  background: #333333;
+  color: white;
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.scanwise-header h1 {
+  margin: 0;
+  font-size: 2.8rem;
+  letter-spacing: 1px;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  z-index: 1;
+  color: white;
+}
+
+/* Input Area */
+.input-area {
+  width: 100%;
+  max-width: 450px;
 }
 
 .isbn-input-container {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  max-width: 450px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  transform: translateY(-20px);
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .input-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  margin-bottom: 1.8rem;
+  position: relative;
 }
 
-label {
+.input-group label {
+  font-size: 1.1rem;
+  margin-bottom: 0.5rem;
+  display: block;
   font-weight: 600;
-  color: var(--text);
+  color: #202124;
 }
 
-input, select {
-  padding: 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  font-size: 1rem;
+.input-group input {
   width: 100%;
-  /* Mobile-specific fixes to prevent auto-zoom */
-  font-size: 16px;
-  touch-action: manipulation;
-  max-height: 100%;
-}
-
-/* Specific mobile styles for number inputs to prevent zoom */
-input[type="number"] {
-  font-size: 16px; /* Prevent zoom on iOS */
-}
-
-/* Fix to prevent zooming on focus for iOS devices */
-@media screen and (max-width: 768px) {
-  input, select, textarea {
-    font-size: 16px; /* iOS won't zoom if font size is at least 16px */
-  }
-  
-  .input-field input {
-    font-size: 16px;
-  }
-  
-  .floating-label-container input {
-    font-size: 16px;
-  }
-  
-  /* Ensure text doesn't appear too small after preventing zoom */
-  .mobile-field label {
-    font-size: 14px;
-    margin-bottom: 4px;
-  }
-  
-  /* Better touch targets for mobile */
-  .button-container button {
-    min-height: 44px; /* Apple's recommended minimum touch target size */
-  }
-}
-
-input:focus, select:focus {
+  padding: 1rem;
+  font-size: 1.1rem;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(58, 134, 255, 0.2);
+  transition: all 0.3s ease;
+  background-color: #f8f9fa;
+}
+
+.input-group input:focus {
+  border-color: #4285F4;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.25);
+  background-color: white;
 }
 
 .search-button {
-  background-color: var(--primary);
+  width: 100%;
+  padding: 1rem;
+  margin-top: 1.5rem;
+  background: linear-gradient(135deg, #4285F4 0%, #34a853 100%);
   color: white;
-  font-weight: 600;
-  padding: 0.75rem;
   border: none;
-  border-radius: var(--radius);
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background-color 0.2s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
 }
 
-.search-button:hover {
-  background-color: var(--secondary);
+.search-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b78e7 0%, #2d9348 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .search-button:disabled {
-  background-color: var(--border);
+  background: linear-gradient(135deg, #cccccc 0%, #bbbbbb 100%);
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 /* Results styling */
@@ -242,31 +225,51 @@ input:focus, select:focus {
 
 /* Metrics Banner */
 .metrics-banner {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 0.5rem;
-  padding: 0.75rem;
-  background-color: var(--background);
-  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .metric {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
+  flex: 1;
+  min-width: 120px;
+  padding: 8px;
+  border-radius: 6px;
+  background-color: #f8f9fa;
+  border-left: 3px solid #ddd;
+}
+
+.metric:nth-child(1) {
+  border-left-color: #4285F4;
+}
+
+.metric:nth-child(2) {
+  border-left-color: #34A853;
+}
+
+.metric:nth-child(3) {
+  border-left-color: #FBBC05;
 }
 
 .metric span:first-child {
-  font-size: 0.8rem;
-  color: var(--text-light);
+  display: block;
+  font-size: 0.75rem;
   font-weight: 600;
+  color: #5f6368;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .metric .value {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--text);
+  color: #202124;
 }
 
 .metric .stage-value {
@@ -561,29 +564,29 @@ input:focus, select:focus {
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/%3E%3C/svg%3E");
 }
 
-/* Loading & Error States */
+/* Loading and Error States */
 .loading {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 600;
-  color: var(--primary);
-  z-index: 100;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 1000;
 }
 
 .error-message {
-  padding: 1rem;
-  background-color: rgba(231, 76, 60, 0.1);
-  color: var(--danger);
-  border-radius: var(--radius);
-  margin: 1rem;
-  text-align: center;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #dc3545;
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 1000;
 }
 
 /* Responsive adjustments */
