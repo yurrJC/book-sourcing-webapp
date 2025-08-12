@@ -108,7 +108,8 @@ function App() {
     
     try {
       // Call the backend API to fetch book details from ISBNdb
-      const apiUrl = `/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=STRONG_EQUILIBRIUM`;
+      // Using absolute localhost URL to force local backend usage
+      const apiUrl = `http://localhost:3001/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=STRONG_EQUILIBRIUM`;
       console.log(`(Frontend) Calling API: ${apiUrl}`);
       const response = await fetch(apiUrl);
 
