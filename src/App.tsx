@@ -3,15 +3,23 @@ import './App.css';
 import './ui-enhancements.css';
 
 // Types
+interface BookDetails {
+  title?: string;
+  authors?: string[];
+  image?: string;
+  publisher?: string;
+  binding?: string;
+  pages?: number;
+  date_published?: string;
+  dimensions?: string;
+  source?: 'isbndb' | 'googlebooks';
+}
+
 interface SourcingVerdict {
   verdict: "BUY" | "REJECT";
   decidingStage: number;
   decidingReason: string;
-  bookDetails?: {
-    title?: string;
-    authors?: string[];
-    image?: string;
-  } | null;
+  bookDetails?: BookDetails | null;
 }
 
 function App() {
@@ -19,6 +27,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResult, setSearchResult] = useState<SourcingVerdict | null>(null);
+  const [apiResponse, setApiResponse] = useState<any>(null);
   const [lowestActivePrice, setLowestActivePrice] = useState<string>('');
   const [recentSoldPrice, setRecentSoldPrice] = useState<string>('');
   const [terapeakSales, setTerapeakSales] = useState<string>('');
@@ -98,21 +107,37 @@ function App() {
     setError('');
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockResult: SourcingVerdict = {
-        verdict: "REJECT",
-        decidingStage: 0,
-        decidingReason: "Awaiting manual data input",
-        bookDetails: {
-          title: "Sample Book Title",
-          authors: ["Sample Author"],
-          image: undefined
+      // Call the backend API to fetch book details from ISBNdb
+      const apiUrl = `/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=STRONG_EQUILIBRIUM`;
+      console.log(`(Frontend) Calling API: ${apiUrl}`);
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        let errorMessage = `Error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch (parseError) {
+          // Ignore if response body isn't JSON
         }
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      console.log("(Frontend) Backend Response:", result);
+      
+      // Store the API response for use in render
+      setApiResponse(result);
+
+      // Create result object with book details from ISBNdb
+      const initialVerdict: SourcingVerdict = {
+        verdict: result.verdict || "REJECT",
+        decidingStage: result.stage || 0,
+        decidingReason: result.verdict === "BUY" ? "Book passes initial screening" : "Awaiting manual data input",
+        bookDetails: result.bookDetails
       };
       
-      setSearchResult(mockResult);
+      setSearchResult(initialVerdict);
       
       // Auto-focus the quick scan input for the next scan
       setTimeout(() => {
@@ -120,7 +145,21 @@ function App() {
       }, 100);
 
     } catch (error) {
-      setError('An error occurred during search');
+      console.error("(Frontend) API Fetch Error:", error);
+      let errorMessage = (error as Error).message || 'An unexpected error occurred fetching data';
+      
+      // Check if this might be a network connectivity issue
+      if (
+        errorMessage.includes('Failed to fetch') || 
+        errorMessage.includes('NetworkError') || 
+        errorMessage.includes('Network request failed')
+      ) {
+        errorMessage = 'Network error: Please check your internet connection and try again.';
+      }
+      
+      setError(errorMessage);
+      setSearchResult(null);
+      setApiResponse(null);
     } finally {
       setLoading(false);
     }
@@ -128,6 +167,7 @@ function App() {
 
   const handleNewScan = () => {
     setSearchResult(null);
+    setApiResponse(null);
     setIsbn('');
     // Keep manual input fields populated for faster data entry
     setTimeout(() => {
@@ -137,6 +177,7 @@ function App() {
 
   const handleClearAll = () => {
     setSearchResult(null);
+    setApiResponse(null);
     setIsbn('');
     setLowestActivePrice('');
     setRecentSoldPrice('');
@@ -223,7 +264,22 @@ function App() {
           <div className="verdict-banner compact">
             <div className="verdict-label">{searchResult.verdict}</div>
             <div className="verdict-details">
-              Sales to Ratio: <span className="str-value">0.00</span>
+              {searchResult.decidingStage > 0 ? (
+                <>
+                  Stage {searchResult.decidingStage} Probability: <span className="str-value">
+                    {searchResult.decidingStage === 1 ? 
+                      (apiResponse?.metrics?.p1 * 100).toFixed(1) : 
+                      (apiResponse?.metrics?.p_adj * 100).toFixed(1)
+                    }%
+                  </span>
+                </>
+              ) : (
+                <>
+                  Sales to Ratio: <span className="str-value">
+                    {apiResponse?.metrics?.overallSTR ? (apiResponse.metrics.overallSTR * 100).toFixed(1) : '0.0'}%
+                  </span>
+                </>
+              )}
               {' '}&bull;{' '}
               Threshold: <span className="threshold-value">60.0%</span>
             </div>
@@ -253,6 +309,12 @@ function App() {
                 <span className="label">ISBN:</span> 
                 <span className="value">{isbn}</span>
               </p>
+              {searchResult?.bookDetails?.publisher && (
+                <p className="book-publisher">
+                  <span className="label">Publisher:</span> 
+                  <span className="value">{searchResult.bookDetails.publisher}</span>
+                </p>
+              )}
             </div>
           </div>
           
@@ -261,15 +323,19 @@ function App() {
             <div className="metrics-banner">
               <div className="metric">
                 <span>Active Count</span>
-                <span className="value">{lowestActivePrice || '0'}</span>
+                <span className="value">{apiResponse?.metrics?.activeCount || '0'}</span>
               </div>
               <div className="metric">
                 <span>Sold Count</span>
-                <span className="value">{recentSoldPrice || '0'}</span>
+                <span className="value">{apiResponse?.metrics?.soldCount || '0'}</span>
               </div>
               <div className="metric">
                 <span>STR</span>
-                <span className="value">0.00</span>
+                <span className="value">{apiResponse?.metrics?.overallSTR ? (apiResponse.metrics.overallSTR * 100).toFixed(1) : '0.0'}%</span>
+              </div>
+              <div className="metric">
+                <span>Min Price</span>
+                <span className="value">${apiResponse?.metrics?.Pmin_overall ? apiResponse.metrics.Pmin_overall.toFixed(2) : '0.00'}</span>
               </div>
             </div>
           </div>
