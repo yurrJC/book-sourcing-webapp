@@ -377,7 +377,13 @@ function App() {
                 const author = searchResult?.bookDetails?.authors?.[0] || '';
                 const mainTitle = title.split(':')[0].trim(); // Get title before colon
                 const searchQuery = `${mainTitle} ${author}`.trim();
-                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&tabName=SOLD&_nkw=${encodeURIComponent(searchQuery)}`;
+                
+                // Calculate dynamic dates: 3 years from current date
+                const now = new Date();
+                const endDate = now.getTime();
+                const startDate = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate()).getTime();
+                
+                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${encodeURIComponent(searchQuery)}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&tabName=SOLD&tz=Australia%2FMelbourne`;
                 safeOpenExternalLink(terapeakUrl);
               }}
             >
