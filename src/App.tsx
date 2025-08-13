@@ -383,7 +383,10 @@ function App() {
                 const endDate = now.getTime();
                 const startDate = new Date(now.getFullYear() - 3, now.getMonth(), now.getDate()).getTime();
                 
-                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${encodeURIComponent(searchQuery)}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&tabName=SOLD&tz=Australia%2FMelbourne`;
+                // Format search query with + signs between words (like eBay expects)
+                const formattedQuery = searchQuery.replace(/\s+/g, '+');
+                
+                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${formattedQuery}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&tabName=SOLD&tz=Australia%2FMelbourne`;
                 safeOpenExternalLink(terapeakUrl);
               }}
             >
