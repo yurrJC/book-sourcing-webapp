@@ -262,28 +262,28 @@ function App() {
             </div>
           </div>
           
-          {/* Verdict Banner - Compact */}
+          {/* Lowest Price Banner - Compact */}
           <div className="verdict-banner compact">
-            <div className="verdict-label">{searchResult.verdict}</div>
+            <div className="verdict-label">Lowest Price</div>
             <div className="verdict-details">
-              {searchResult.decidingStage > 0 ? (
-                <>
-                  Stage {searchResult.decidingStage} Probability: <span className="str-value">
-                    {searchResult.decidingStage === 1 ? 
-                      (apiResponse?.metrics?.p1 * 100).toFixed(1) : 
-                      (apiResponse?.metrics?.p_adj * 100).toFixed(1)
-                    }%
-                  </span>
-                </>
-              ) : (
-                <>
-                  Sales to Ratio: <span className="str-value">
-                    {apiResponse?.metrics?.overallSTR ? (apiResponse.metrics.overallSTR * 100).toFixed(1) : '0.0'}%
-                  </span>
-                </>
-              )}
+              <span className="str-value">
+                ${apiResponse?.metrics?.Pmin_overall ? apiResponse.metrics.Pmin_overall.toFixed(2) : '0.00'}
+              </span>
               {' '}&bull;{' '}
-              Threshold: <span className="threshold-value">60.0%</span>
+              Min Sourcing Price: <span className="threshold-value">$20.00</span>
+              {' '}&bull;{' '}
+              <span className="str-value">
+                {apiResponse?.metrics?.Pmin_overall ? 
+                  (apiResponse.metrics.Pmin_overall >= 20.00 ? 
+                    `+${((apiResponse.metrics.Pmin_overall - 20.00) / 20.00 * 100).toFixed(1)}%` : 
+                    `-${((20.00 - apiResponse.metrics.Pmin_overall) / 20.00 * 100).toFixed(1)}%`
+                  ) : '0.0%'
+                }
+              </span>
+              {' '}&bull;{' '}
+              <span className={apiResponse?.metrics?.Pmin_overall && apiResponse.metrics.Pmin_overall >= 20.00 ? 'str-value' : 'threshold-value'}>
+                {apiResponse?.metrics?.Pmin_overall && apiResponse.metrics.Pmin_overall >= 20.00 ? 'ABOVE' : 'BELOW'} THRESHOLD
+              </span>
             </div>
           </div>
           
