@@ -377,8 +377,8 @@ function App() {
                 const author = searchResult?.bookDetails?.authors?.[0] || '';
                 const mainTitle = title.split(':')[0].trim(); // Get title before colon
                 const searchQuery = `${mainTitle} ${author}`.trim();
-                const ebayUrl = `https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=0&_from=R40&_sop=15&rt=nc&LH_PrefLoc=1`;
-                safeOpenExternalLink(ebayUrl);
+                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&tabName=SOLD&searchQuery=${encodeURIComponent(searchQuery)}`;
+                safeOpenExternalLink(terapeakUrl);
               }}
             >
               TERAPEAK
