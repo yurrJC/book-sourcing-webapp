@@ -264,7 +264,7 @@ function App() {
           
           {/* Lowest Price Banner - Compact */}
           <div className="verdict-banner compact">
-            <div className="verdict-label">Lowest Price</div>
+            <div className="verdict-label" style={{color: 'black'}}>Lowest Price</div>
             <div className="verdict-details">
               <span className="str-value">
                 ${apiResponse?.metrics?.Pmin_overall ? apiResponse.metrics.Pmin_overall.toFixed(2) : '0.00'}
@@ -346,25 +346,53 @@ function App() {
           <div className="action-buttons">
             <button 
               className="action-btn actives"
-              onClick={() => safeOpenExternalLink('https://www.ebay.com.au')}
+              onClick={() => {
+                const title = searchResult?.bookDetails?.title || '';
+                const author = searchResult?.bookDetails?.authors?.[0] || '';
+                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const searchQuery = `${mainTitle} ${author}`.trim();
+                const ebayUrl = `https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=0&_from=R40&_sop=15&rt=nc&LH_PrefLoc=1`;
+                safeOpenExternalLink(ebayUrl);
+              }}
             >
               ACTIVES
             </button>
             <button 
               className="action-btn solds"
-              onClick={() => safeOpenExternalLink('https://www.ebay.com.au')}
+              onClick={() => {
+                const title = searchResult?.bookDetails?.title || '';
+                const author = searchResult?.bookDetails?.authors?.[0] || '';
+                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const searchQuery = `${mainTitle} ${author}`.trim();
+                const ebayUrl = `https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=0&_from=R40&_sop=15&rt=nc&LH_PrefLoc=1&LH_Sold=1`;
+                safeOpenExternalLink(ebayUrl);
+              }}
             >
               SOLDS
             </button>
             <button 
               className="action-btn terapeak"
-              onClick={() => safeOpenExternalLink('https://www.ebay.com.au')}
+              onClick={() => {
+                const title = searchResult?.bookDetails?.title || '';
+                const author = searchResult?.bookDetails?.authors?.[0] || '';
+                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const searchQuery = `${mainTitle} ${author}`.trim();
+                const ebayUrl = `https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=0&_from=R40&_sop=15&rt=nc&LH_PrefLoc=1`;
+                safeOpenExternalLink(ebayUrl);
+              }}
             >
               TERAPEAK
             </button>
             <button 
               className="action-btn amazon"
-              onClick={() => safeOpenExternalLink('https://www.amazon.com.au')}
+              onClick={() => {
+                const title = searchResult?.bookDetails?.title || '';
+                const author = searchResult?.bookDetails?.authors?.[0] || '';
+                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const searchQuery = `${mainTitle} ${author}`.trim();
+                const amazonUrl = `https://www.amazon.com.au/s?k=${encodeURIComponent(searchQuery)}`;
+                safeOpenExternalLink(amazonUrl);
+              }}
             >
               AMAZON
             </button>
