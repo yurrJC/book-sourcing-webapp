@@ -130,15 +130,16 @@ function App() {
       console.log("(Frontend) Backend Response:", result);
       
       // Log eBay-specific data for debugging
-      if (result.metrics) {
+      if (result.ebayData) {
         console.log("(Frontend) eBay Data Details:", {
-          lowestPrice: result.metrics.Pmin_overall,
-          activeCount: result.metrics.activeCount,
-          soldCount: result.metrics.soldCount,
-          overallSTR: result.metrics.overallSTR,
-          prices: result.metrics.pricesA || 'Not available',
-          soldPrices: result.metrics.pricesS || 'Not available'
+          lowestPrice: result.ebayData.lowestPrice,
+          basePrice: result.ebayData.basePrice,
+          shippingCost: result.ebayData.shippingCost,
+          usedCount: result.ebayData.usedCount,
+          newCount: result.ebayData.newCount
         });
+      } else {
+        console.log("(Frontend) No ebayData found in response");
       }
       
       // Store the API response for use in render
