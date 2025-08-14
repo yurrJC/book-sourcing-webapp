@@ -7,6 +7,7 @@ import cors from 'cors';
 import { calculateSourcingVerdict, MOCK_SCENARIOS } from './sourcing-engine'; // Import backend engine
 import { SourcingResult } from './types'; // Import backend types
 import { getBookDetails } from './bookService'; // Import the unified book service
+import { findLowestPrice } from './ebayService'; // Import eBay service
 import ebayRoutes from './routes/ebay'; // Import eBay routes
 
 const app = express();
@@ -52,13 +53,26 @@ app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
     // This will try ISBNdb first, then Google Books if ISBNdb fails
     const bookDetailsResult = await getBookDetails(isbn);
     
-    // --- Call the backend sourcing logic with real book details for eBay search --- 
-    const sourcingResult: SourcingResult = await calculateSourcingVerdict(isbn, scenarioKey, bookDetailsResult);
+    // --- Get eBay lowest price data --- 
+    let ebayData = null;
+    try {
+      if (bookDetailsResult && bookDetailsResult.title && bookDetailsResult.authors && bookDetailsResult.authors.length > 0) {
+        const title = bookDetailsResult.title;
+        const author = bookDetailsResult.authors[0];
+        const mainTitle = title.split(':')[0].trim();
+        const searchTerm = `${mainTitle} ${author}`;
+        
+        console.log(`(Server) Searching eBay for: "${searchTerm}"`);
+        ebayData = await findLowestPrice(searchTerm, isbn);
+      }
+    } catch (error) {
+      console.error('(Server) Error fetching eBay data:', error);
+    }
     
-    // --- Combine results and Send back to the frontend --- 
-    const finalResult: SourcingResult = {
-      ...sourcingResult, // Spread the results from the sourcing engine
-      bookDetails: bookDetailsResult // Add the fetched book details (now includes source info)
+    // --- Send simple response with book details + eBay lowest price --- 
+    const finalResult = {
+      bookDetails: bookDetailsResult,
+      ebayData: ebayData
     };
 
     res.json(finalResult); 
