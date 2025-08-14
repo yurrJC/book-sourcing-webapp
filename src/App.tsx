@@ -24,6 +24,7 @@ interface SourcingVerdict {
 
 function App() {
   const [isbn, setIsbn] = useState('');
+  const [scannedIsbn, setScannedIsbn] = useState<string>(''); // Store the ISBN of the scanned book
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResult, setSearchResult] = useState<SourcingVerdict | null>(null);
@@ -155,6 +156,9 @@ function App() {
       
       setSearchResult(initialVerdict);
       
+      // Store the scanned ISBN for display in the results
+      setScannedIsbn(isbnToSearch);
+      
       // Clear the ISBN field for the next scan
       setIsbn('');
       
@@ -190,6 +194,7 @@ function App() {
     setSearchResult(null);
     setApiResponse(null);
     setIsbn('');
+    setScannedIsbn(''); // Clear the scanned ISBN for new scan
     setError(null); // Clear any previous errors
     // Keep manual input fields populated for faster data entry
     setTimeout(() => {
@@ -201,6 +206,7 @@ function App() {
     setSearchResult(null);
     setApiResponse(null);
     setIsbn('');
+    setScannedIsbn(''); // Clear the scanned ISBN
     setError(null); // Clear any previous errors
     setLowestActivePrice('');
     setRecentSoldPrice('');
@@ -323,7 +329,7 @@ function App() {
               </p>
               <p className="book-isbn">
                 <span className="label">ISBN:</span> 
-                <span className="value">{isbn}</span>
+                <span className="value">{scannedIsbn}</span>
               </p>
               {searchResult?.bookDetails?.publisher && (
                 <p className="book-publisher">
