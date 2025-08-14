@@ -155,6 +155,9 @@ function App() {
       
       setSearchResult(initialVerdict);
       
+      // Clear the ISBN field for the next scan
+      setIsbn('');
+      
       // Auto-focus the quick scan input for the next scan
       setTimeout(() => {
         quickScanInputRef.current?.focus();
@@ -176,6 +179,8 @@ function App() {
       setError(errorMessage);
       setSearchResult(null);
       setApiResponse(null);
+      // Clear the ISBN field so user can retry with a new scan
+      setIsbn('');
     } finally {
       setLoading(false);
     }
@@ -185,6 +190,7 @@ function App() {
     setSearchResult(null);
     setApiResponse(null);
     setIsbn('');
+    setError(null); // Clear any previous errors
     // Keep manual input fields populated for faster data entry
     setTimeout(() => {
       quickScanInputRef.current?.focus();
@@ -195,6 +201,7 @@ function App() {
     setSearchResult(null);
     setApiResponse(null);
     setIsbn('');
+    setError(null); // Clear any previous errors
     setLowestActivePrice('');
     setRecentSoldPrice('');
     setTerapeakSales('');
