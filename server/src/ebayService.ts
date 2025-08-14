@@ -140,6 +140,7 @@ export async function findLowestPrice(searchTerm: string, isbn: string): Promise
         const isPhysicalBook = !title.includes('audiobook') && 
                !title.includes('audio book') && 
                !title.includes('audio cd') &&
+               !title.includes('audio cd') &&
                !title.includes('cd') &&
                !title.includes('dvd') &&
                !title.includes('blu-ray') &&

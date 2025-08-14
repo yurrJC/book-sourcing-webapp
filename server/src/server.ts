@@ -31,10 +31,8 @@ app.use('/api', ebayRoutes);
 // Updated search endpoint using backend sourcing engine AND unified book lookup with fallback
 app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
   const isbn = req.query.isbn as string;
-  // TODO: Later, we might get scenario from query params or other source for testing
-  // For now, just use a default or let the engine pick one?
-  // Let's allow selecting a scenario via query param for testing consistency
-  const scenarioKey = (req.query.scenario as keyof typeof MOCK_SCENARIOS) || 'STRONG_EQUILIBRIUM';
+  // Use fallback scenario as default since we're now using real eBay data
+  const scenarioKey = (req.query.scenario as keyof typeof MOCK_SCENARIOS) || 'FALLBACK';
 
   console.log(`Received search request for ISBN: ${isbn}, Scenario: ${scenarioKey}`);
 
