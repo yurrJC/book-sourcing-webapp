@@ -110,7 +110,7 @@ function App() {
       // Call the backend API to fetch book details from ISBNdb
       // Use production API URL - change to localhost:3001 for local development
       const baseUrl = 'https://book-sourcing-api.onrender.com'; // Change to 'http://localhost:3001' for local dev
-      const apiUrl = `${baseUrl}/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=STRONG_EQUILIBRIUM`;
+      const apiUrl = `${baseUrl}/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=FALLBACK`;
       console.log(`(Frontend) Calling API: ${apiUrl}`);
       const response = await fetch(apiUrl);
 
