@@ -68,24 +68,37 @@ body {
 .scanwise-header {
   text-align: center;
   margin-bottom: 2rem;
-  padding: 2rem 0;
+  padding: 4rem 2rem 3rem 2rem;
   background: #333333;
   color: white;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 20px 20px;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
   position: relative;
   overflow: hidden;
 }
 
+.scanwise-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(90deg, #4285F4 0%, #34a853 100%);
+  z-index: 2;
+  box-shadow: 0 2px 8px rgba(66, 133, 244, 0.3);
+}
+
 .scanwise-header h1 {
   margin: 0;
-  font-size: 2.8rem;
-  letter-spacing: 1px;
+  font-size: 3.2rem;
+  letter-spacing: 2px;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: relative;
   z-index: 1;
   color: white;
+  padding: 1rem 0;
 }
 
 /* Input Area */
@@ -95,14 +108,14 @@ body {
 }
 
 .isbn-input-container {
-  max-width: 450px;
+  max-width: 500px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 2.5rem;
   background-color: white;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-  transform: translateY(-20px);
-  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.08);
+  transform: translateY(-25px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .input-group {
@@ -111,28 +124,52 @@ body {
 }
 
 .input-group label {
-  font-size: 1.1rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  margin-bottom: 0.8rem;
   display: block;
-  font-weight: 600;
+  font-weight: 700;
   color: #202124;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 1rem;
-  font-size: 1.1rem;
-  border: 1px solid #dadce0;
-  border-radius: 8px;
+  padding: 1.2rem;
+  font-size: 1.2rem;
+  border: 2px solid #dadce0;
+  border-radius: 12px;
   outline: none;
   transition: all 0.3s ease;
   background-color: #f8f9fa;
+  color: #202124;
+  font-weight: 500;
 }
 
 .input-group input:focus {
   border-color: #4285F4;
   box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.25);
   background-color: white;
+}
+
+/* Fix autocomplete dropdown styling */
+.input-group input:-webkit-autofill,
+.input-group input:-webkit-autofill:hover,
+.input-group input:-webkit-autofill:focus {
+  -webkit-text-fill-color: #202124;
+  -webkit-box-shadow: 0 0 0px 1000px white inset;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Override browser autocomplete dropdown colors */
+.input-group input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+}
+
+/* Ensure input text is always readable */
+.input-group input::placeholder {
+  color: #5f6368;
+  opacity: 1;
 }
 
 .search-button {
@@ -603,4 +640,36 @@ body {
     grid-column: span 3;
     text-align: right;
   }
+}
+
+/* Fix autocomplete dropdown text color */
+input::-webkit-autofill,
+input::-webkit-autofill:hover,
+input::-webkit-autofill:focus,
+input::-webkit-autofill:active {
+  -webkit-text-fill-color: #202124 !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Override browser default autocomplete colors */
+input:-webkit-autofill {
+  background-color: white !important;
+  color: #202124 !important;
+}
+
+/* Ensure dropdown text is readable */
+input[list]::-webkit-calendar-picker-indicator,
+input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+}
+
+/* Additional input styling for better readability */
+.input-group input {
+  color: #202124 !important;
+}
+
+.input-group input::placeholder {
+  color: #5f6368 !important;
+  opacity: 1;
 }

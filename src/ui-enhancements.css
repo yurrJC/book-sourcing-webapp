@@ -1657,3 +1657,55 @@ input[type="number"] {
 .floating-label-container input {
   padding-top: 10px; /* Make space for label */
 }
+
+/* Comprehensive autocomplete dropdown styling fixes */
+input::-webkit-autofill,
+input::-webkit-autofill:hover,
+input::-webkit-autofill:focus,
+input::-webkit-autofill:active {
+  -webkit-text-fill-color: #202124 !important;
+  -webkit-box-shadow: 0 0 0 1000px white inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Override browser default autocomplete colors */
+input:-webkit-autofill {
+  background-color: white !important;
+  color: #202124 !important;
+}
+
+/* Ensure dropdown text is always readable */
+input[list]::-webkit-calendar-picker-indicator,
+input::-webkit-calendar-picker-indicator {
+  filter: invert(0.5);
+}
+
+/* Force readable text colors in all input states */
+.input-group input,
+.quick-isbn-field,
+input[type="text"],
+input[type="search"] {
+  color: #202124 !important;
+  background-color: white !important;
+}
+
+/* Ensure placeholder text is visible */
+.input-group input::placeholder,
+.quick-isbn-field::placeholder,
+input[type="text"]::placeholder,
+input[type="search"]::placeholder {
+  color: #5f6368 !important;
+  opacity: 1 !important;
+}
+
+/* Override any browser dark mode interference */
+@media (prefers-color-scheme: dark) {
+  input {
+    color: #202124 !important;
+    background-color: white !important;
+  }
+  
+  input::placeholder {
+    color: #5f6368 !important;
+  }
+}
