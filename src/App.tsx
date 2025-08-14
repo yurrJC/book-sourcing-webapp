@@ -112,6 +112,7 @@ function App() {
       const baseUrl = 'https://book-sourcing-api.onrender.com'; // Change to 'http://localhost:3001' for local dev
       const apiUrl = `${baseUrl}/api/search?isbn=${encodeURIComponent(isbnToSearch)}&scenario=FALLBACK`;
       console.log(`(Frontend) Calling API: ${apiUrl}`);
+      console.log(`(Frontend) Search term being sent to eBay: "${isbnToSearch}"`);
       const response = await fetch(apiUrl);
 
       if (!response.ok) {
@@ -127,6 +128,18 @@ function App() {
 
       const result = await response.json();
       console.log("(Frontend) Backend Response:", result);
+      
+      // Log eBay-specific data for debugging
+      if (result.metrics) {
+        console.log("(Frontend) eBay Data Details:", {
+          lowestPrice: result.metrics.Pmin_overall,
+          activeCount: result.metrics.activeCount,
+          soldCount: result.metrics.soldCount,
+          overallSTR: result.metrics.overallSTR,
+          prices: result.metrics.pricesA || 'Not available',
+          soldPrices: result.metrics.pricesS || 'Not available'
+        });
+      }
       
       // Store the API response for use in render
       setApiResponse(result);

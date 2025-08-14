@@ -35,7 +35,8 @@ export const MOCK_SCENARIOS = {
 export const calculateSourcingVerdict = async (
   isbn: string,
   // For now, we still accept a scenario key for testing. Later, real data will be passed.
-  scenarioKey: keyof typeof MOCK_SCENARIOS = "FALLBACK"
+  scenarioKey: keyof typeof MOCK_SCENARIOS = "FALLBACK",
+  bookDetails?: any
 ): Promise<SourcingResult> => {
   console.log(`(Backend Engine) Starting calculation for ISBN: ${isbn}`);
   
@@ -48,9 +49,22 @@ export const calculateSourcingVerdict = async (
   let amazonRank: number = 150000; // Default fallback
   
   try {
-    // Get book details to create search term
-    // For now, we'll use the ISBN as search term, but ideally we'd get title + author
-    const searchTerm = isbn;
+    // Create search term from book details (title pre-colon + first author)
+    let searchTerm = isbn; // Fallback to ISBN if no book details
+    
+    if (bookDetails && bookDetails.title && bookDetails.authors && bookDetails.authors.length > 0) {
+      const title = bookDetails.title;
+      const author = bookDetails.authors[0];
+      
+      // Get main title (before colon) and first author
+      const mainTitle = title.split(':')[0].trim();
+      searchTerm = `${mainTitle} ${author}`;
+      
+      console.log(`(Backend Engine) Book details found: Title="${title}", Author="${author}"`);
+      console.log(`(Backend Engine) Using search term: "${searchTerm}"`);
+    } else {
+      console.log(`(Backend Engine) No book details available, using ISBN as search term: "${searchTerm}"`);
+    }
     
     console.log(`(Backend Engine) Fetching real eBay data for: "${searchTerm}"`);
     

@@ -52,8 +52,8 @@ app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
     // This will try ISBNdb first, then Google Books if ISBNdb fails
     const bookDetailsResult = await getBookDetails(isbn);
     
-    // --- Call the backend sourcing logic (still using mock scenario for prices/sales) --- 
-    const sourcingResult: SourcingResult = await calculateSourcingVerdict(isbn, scenarioKey);
+    // --- Call the backend sourcing logic with real book details for eBay search --- 
+    const sourcingResult: SourcingResult = await calculateSourcingVerdict(isbn, scenarioKey, bookDetailsResult);
     
     // --- Combine results and Send back to the frontend --- 
     const finalResult: SourcingResult = {
