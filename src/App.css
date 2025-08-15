@@ -39,10 +39,12 @@ body {
 /* Basic App Styles */
 .App {
   max-width: 1400px;
-  width: 95%;
+  width: 100%;
   margin: 0 auto;
   background-color: #ffffff;
   min-height: 100vh;
+  display: flex;
+  justify-content: center;
 }
 
 .app-container {
@@ -50,6 +52,9 @@ body {
   flex-direction: column;
   min-height: 100vh;
   background-color: #f8f9fa;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .content-area {
@@ -224,6 +229,10 @@ body {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: center;
 }
 
 /* Style the new results wrapper */
