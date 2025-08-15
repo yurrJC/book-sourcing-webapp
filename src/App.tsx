@@ -41,9 +41,35 @@ function App() {
   // Utility functions
   const safeOpenExternalLink = (url: string) => {
     try {
-      window.open(url, '_blank', 'noopener,noreferrer');
+      // Check if we're in a PWA/standalone mode
+      const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                    (window.navigator as any).standalone === true;
+      
+      if (isPWA) {
+        // We're in a PWA/standalone mode - redirect completely to external app
+        // This prevents the white page issue by fully leaving the PWA
+        
+        // Add visual feedback before redirect
+        document.body.classList.add('external-link-redirecting');
+        
+        // Small delay to show the loading state, then redirect
+        setTimeout(() => {
+          if (/Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+            // Mobile device - try to open in native app
+            window.location.href = url;
+          } else {
+            // Desktop PWA - redirect to web version
+            window.location.href = url;
+          }
+        }, 100);
+      } else {
+        // Regular browser mode - open in new tab
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     } catch (error) {
       console.error('Error opening external link:', error);
+      // Fallback to direct navigation
+      window.location.href = url;
     }
   };
 

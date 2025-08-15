@@ -47,6 +47,22 @@ body {
   justify-content: center;
 }
 
+/* PWA External Link Handling */
+.App.external-link-redirecting {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
+body.external-link-redirecting {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
+body.external-link-redirecting .App {
+  background-color: #f8f9fa;
+  transition: background-color 0.3s ease;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
