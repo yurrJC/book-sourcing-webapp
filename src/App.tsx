@@ -220,7 +220,7 @@ function App() {
       {!searchResult ? (
         <div className="content-area">
           <div className="scanwise-header">
-            <h1>ScanWise</h1>
+            <img src="/images/scanwise-logo.png" alt="ScanWise Logo" className="scanwise-logo" />
           </div>
           <div className="input-area">
             <form onSubmit={handleSearch}>
