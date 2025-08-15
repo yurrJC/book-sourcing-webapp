@@ -102,16 +102,19 @@ body {
 }
 
 .scanwise-logo {
-  max-width: 300px;
+  max-width: 280px;
   height: auto;
   margin: 0 auto;
   display: block;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
-  transition: transform 0.3s ease;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  object-fit: contain;
 }
 
 .scanwise-logo:hover {
-  transform: scale(1.05);
+  transform: scale(1.02);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.5));
 }
 
 /* Input Area */
