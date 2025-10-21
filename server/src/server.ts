@@ -9,6 +9,7 @@ import { SourcingResult } from './types'; // Import backend types
 import { getBookDetails } from './bookService'; // Import the unified book service
 import { findLowestPrice } from './ebayService'; // Import eBay service
 import ebayRoutes from './routes/ebay'; // Import eBay routes
+import { parseTitleWithAI } from './aiTitleParser'; // Import AI title parser
 
 const app = express();
 const port = process.env.PORT || 3001; // Use port 3001 for the backend
@@ -26,6 +27,27 @@ app.use(express.json()); // Parse JSON request bodies
 
 // Register routes
 app.use('/api', ebayRoutes);
+
+// AI Title Parsing endpoint
+app.post('/api/parse-title', async (req: Request, res: Response): Promise<void> => {
+  const { title } = req.body;
+  
+  if (!title || typeof title !== 'string') {
+    res.status(400).json({ error: 'Title is required and must be a string' });
+    return;
+  }
+  
+  try {
+    const parsedTitle = await parseTitleWithAI(title);
+    res.json({ 
+      originalTitle: title,
+      parsedTitle: parsedTitle 
+    });
+  } catch (error) {
+    console.error('(Server) Error parsing title with AI:', error);
+    res.status(500).json({ error: 'Failed to parse title' });
+  }
+});
 
 // --- API Endpoints ---
 
@@ -59,7 +81,7 @@ app.get('/api/search', async (req: Request, res: Response): Promise<void> => {
       if (bookDetailsResult && bookDetailsResult.title && bookDetailsResult.authors && bookDetailsResult.authors.length > 0) {
         const title = bookDetailsResult.title;
         const author = bookDetailsResult.authors[0];
-        const mainTitle = title.split(':')[0].trim();
+        const mainTitle = await parseTitleWithAI(title);
         const searchTerm = `${mainTitle} ${author}`;
         
         console.log(`(Server) Searching eBay for: "${searchTerm}"`);

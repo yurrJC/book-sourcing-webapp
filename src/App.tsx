@@ -28,6 +28,30 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResult, setSearchResult] = useState<SourcingVerdict | null>(null);
+
+  // AI-powered title parsing function
+  const parseTitleWithAI = async (title: string): Promise<string> => {
+    try {
+      const response = await fetch('/api/parse-title', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to parse title');
+      }
+      
+      const data = await response.json();
+      return data.parsedTitle;
+    } catch (error) {
+      console.error('Error parsing title with AI:', error);
+      // Fallback to simple colon splitting
+      return title.includes(':') ? title.split(':')[0].trim() : title.trim();
+    }
+  };
   const [apiResponse, setApiResponse] = useState<any>(null);
   const [lowestActivePrice, setLowestActivePrice] = useState<string>('');
   const [recentSoldPrice, setRecentSoldPrice] = useState<string>('');
@@ -392,10 +416,10 @@ function App() {
           <div className="action-buttons">
             <button 
               className="action-btn actives"
-              onClick={() => {
+              onClick={async () => {
                 const title = searchResult?.bookDetails?.title || '';
                 const author = searchResult?.bookDetails?.authors?.[0] || '';
-                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const mainTitle = await parseTitleWithAI(title);
                 const searchQuery = `${mainTitle} ${author}`.trim();
                 const ebayUrl = `https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=0&_from=R40&_sop=15&rt=nc&LH_PrefLoc=1`;
                 safeOpenExternalLink(ebayUrl);
@@ -405,10 +429,10 @@ function App() {
             </button>
             <button 
               className="action-btn solds"
-              onClick={() => {
+              onClick={async () => {
                 const title = searchResult?.bookDetails?.title || '';
                 const author = searchResult?.bookDetails?.authors?.[0] || '';
-                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const mainTitle = await parseTitleWithAI(title);
                 const searchQuery = `${mainTitle} ${author}`.trim();
                 const ebayUrl = `https://www.ebay.com.au/sch/i.html?_nkw=${encodeURIComponent(searchQuery)}&_sacat=0&_from=R40&_sop=15&rt=nc&LH_PrefLoc=1&LH_Sold=1`;
                 safeOpenExternalLink(ebayUrl);
@@ -418,10 +442,10 @@ function App() {
             </button>
             <button 
               className="action-btn terapeak"
-              onClick={() => {
+              onClick={async () => {
                 const title = searchResult?.bookDetails?.title || '';
                 const author = searchResult?.bookDetails?.authors?.[0] || '';
-                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const mainTitle = await parseTitleWithAI(title);
                 const searchQuery = `${mainTitle} ${author}`.trim();
                 
                 // Calculate dynamic dates: 3 years from current date

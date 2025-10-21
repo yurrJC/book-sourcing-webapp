@@ -1,5 +1,6 @@
 import { SourcingResult, SourcingResultMetrics } from './types'; // Import backend types
 import { findLowestPrice } from './ebayService';
+import { parseTitleWithAI } from './aiTitleParser'; // Import AI title parser
 
 // --- Parameters (from reference sheet) ---
 export const P_MIN_THRESHOLD = 0.63; // p_min - Minimum 6-month success probability
@@ -56,8 +57,8 @@ export const calculateSourcingVerdict = async (
       const title = bookDetails.title;
       const author = bookDetails.authors[0];
       
-      // Get main title (before colon) and first author
-      const mainTitle = title.split(':')[0].trim();
+      // Get main title using AI-powered parsing
+      const mainTitle = await parseTitleWithAI(title);
       searchTerm = `${mainTitle} ${author}`;
       
       console.log(`(Backend Engine) Book details found: Title="${title}", Author="${author}"`);
