@@ -32,7 +32,7 @@ Book title: "${fullTitle}"
 Main title:`;
 
     const response = await axios.post(OPENAI_API_URL, {
-      model: 'gpt-5-nano',
+      model: 'gpt-5-nano', // Use GPT-5 nano (available and cheapest)
       messages: [
         {
           role: 'user',
