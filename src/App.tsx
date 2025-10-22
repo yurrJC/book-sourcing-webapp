@@ -33,7 +33,7 @@ function App() {
   // AI-powered title parsing function
   const parseTitleWithAI = async (title: string): Promise<string> => {
     try {
-      const response = await fetch('/api/parse-title', {
+      const response = await fetch('https://book-sourcing-api.onrender.com/api/parse-title', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
