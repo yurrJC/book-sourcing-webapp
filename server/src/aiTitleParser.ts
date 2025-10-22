@@ -61,8 +61,10 @@ Main title:`;
     console.log('(AI Title Parser) Full response:', JSON.stringify(response.data, null, 2));
     
     if (parsedTitle && parsedTitle.length > 0) {
-      console.log(`(AI Title Parser) "${fullTitle}" → "${parsedTitle}"`);
-      return parsedTitle;
+      // Remove quotes from the AI response if present
+      const cleanTitle = parsedTitle.replace(/^"(.*)"$/, '$1');
+      console.log(`(AI Title Parser) "${fullTitle}" → "${cleanTitle}"`);
+      return cleanTitle;
     } else {
       console.warn('(AI Title Parser) Empty response from OpenAI, using fallback');
       console.log('(AI Title Parser) Output data:', JSON.stringify(output, null, 2));

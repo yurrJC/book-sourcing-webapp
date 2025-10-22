@@ -46,7 +46,9 @@ function App() {
       }
       
       const data = await response.json();
-      return data.parsedTitle;
+      // Remove quotes from the AI response if present
+      const parsedTitle = data.parsedTitle.replace(/^"(.*)"$/, '$1');
+      return parsedTitle;
     } catch (error) {
       console.error('Error parsing title with AI:', error);
       // Fallback to simple colon splitting
