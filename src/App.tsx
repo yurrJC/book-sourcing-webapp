@@ -28,6 +28,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchResult, setSearchResult] = useState<SourcingVerdict | null>(null);
+  const [optimizedTitle, setOptimizedTitle] = useState<string>('');
 
   // AI-powered title parsing function
   const parseTitleWithAI = async (title: string): Promise<string> => {
@@ -196,6 +197,11 @@ function App() {
       // Store the API response for use in render
       setApiResponse(result);
 
+      // Parse the title with AI and store the optimized version
+      const originalTitle = result.bookDetails?.title || '';
+      const aiOptimizedTitle = await parseTitleWithAI(originalTitle);
+      setOptimizedTitle(aiOptimizedTitle);
+      
       // Create result object with book details from ISBNdb
       const initialVerdict: SourcingVerdict = {
         verdict: result.verdict || "REJECT",
@@ -245,6 +251,7 @@ function App() {
     setApiResponse(null);
     setIsbn('');
     setScannedIsbn(''); // Clear the scanned ISBN for new scan
+    setOptimizedTitle(''); // Clear the optimized title
     setError(null); // Clear any previous errors
     // Keep manual input fields populated for faster data entry
     setTimeout(() => {
@@ -257,6 +264,7 @@ function App() {
     setApiResponse(null);
     setIsbn('');
     setScannedIsbn(''); // Clear the scanned ISBN
+    setOptimizedTitle(''); // Clear the optimized title
     setError(null); // Clear any previous errors
     setLowestActivePrice('');
     setRecentSoldPrice('');
@@ -372,7 +380,7 @@ function App() {
               )}
             </div>
             <div className="book-details">
-              <h4 className="book-title">{searchResult?.bookDetails?.title || 'Unknown Title'}</h4>
+              <h4 className="book-title">{optimizedTitle || searchResult?.bookDetails?.title || 'Unknown Title'}</h4>
               <p className="book-author">
                 <span className="label">Author:</span> 
                 <span className="value">{searchResult?.bookDetails?.authors?.join(', ') || 'Unknown Author'}</span>
@@ -464,10 +472,10 @@ function App() {
             </button>
             <button 
               className="action-btn amazon"
-              onClick={() => {
+              onClick={async () => {
                 const title = searchResult?.bookDetails?.title || '';
                 const author = searchResult?.bookDetails?.authors?.[0] || '';
-                const mainTitle = title.split(':')[0].trim(); // Get title before colon
+                const mainTitle = await parseTitleWithAI(title);
                 const searchQuery = `${mainTitle} ${author}`.trim();
                 const amazonUrl = `https://www.amazon.com.au/s?k=${encodeURIComponent(searchQuery)}`;
                 safeOpenExternalLink(amazonUrl);
