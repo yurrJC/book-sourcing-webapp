@@ -203,53 +203,117 @@ export async function findLowestPrice(searchTerm: string, isbn: string): Promise
         // Debug logging for shipping information
         console.log(`Processing item: "${item.title}"`);
         console.log(`  - Base price: $${item.price.value}`);
-        console.log(`  - Shipping field:`, item.shipping);
-        console.log(`  - ShippingOptions field:`, item.shippingOptions);
+        console.log(`  - Shipping field:`, JSON.stringify(item.shipping, null, 2));
+        console.log(`  - ShippingOptions field:`, JSON.stringify(item.shippingOptions, null, 2));
+        console.log(`  - Full item structure:`, JSON.stringify(item, null, 2).substring(0, 500)); // First 500 chars for debugging
         
         const basePrice = parseFloat(item.price.value);
         
-        // Check for shipping cost in the correct field structure
+        // Comprehensive shipping cost extraction - check all possible fields and options
         let shippingCost = 0;
+        const shippingCosts: number[] = []; // Collect all valid shipping costs to find minimum
+        
+        // Method 1: Check direct shipping.shippingCost field
         if (item.shipping && item.shipping.shippingCost) {
           const shippingValue = item.shipping.shippingCost.value;
-          if (shippingValue && shippingValue !== '0.00' && shippingValue !== '0') {
-            shippingCost = parseFloat(shippingValue);
-            if (isNaN(shippingCost)) {
-              console.log(`  - Warning: Invalid shipping cost value: "${shippingValue}", setting to 0`);
-              shippingCost = 0;
-            }
-          }
-        } else if (item.shippingOptions && item.shippingOptions[0] && item.shippingOptions[0].shippingCost) {
-          // Fallback to shippingOptions if shipping field doesn't exist
-          const shippingValue = item.shippingOptions[0].shippingCost.value;
-          if (shippingValue && shippingValue !== '0.00' && shippingValue !== '0') {
-            shippingCost = parseFloat(shippingValue);
-            if (isNaN(shippingCost)) {
-              console.log(`  - Warning: Invalid shipping cost value: "${shippingValue}", setting to 0`);
-              shippingCost = 0;
+          if (shippingValue !== undefined && shippingValue !== null) {
+            const parsedCost = parseFloat(shippingValue);
+            if (!isNaN(parsedCost) && parsedCost >= 0) {
+              shippingCosts.push(parsedCost);
+              console.log(`  - Found shipping cost from shipping.shippingCost: $${parsedCost}`);
             }
           }
         }
         
-        // Check if shipping is free (common for books)
-        const isFreeShipping = shippingCost === 0 || 
-                              (item.shipping && item.shipping.shippingCost && 
-                               (item.shipping.shippingCost.value === '0.00' || item.shipping.shippingCost.value === '0')) ||
-                              (item.shippingOptions && item.shippingOptions[0] && 
-                               item.shippingOptions[0].shippingCost && 
-                               (item.shippingOptions[0].shippingCost.value === '0.00' || item.shippingOptions[0].shippingCost.value === '0'));
+        // Method 2: Check shippingOptions array - find minimum across ALL options
+        if (item.shippingOptions && Array.isArray(item.shippingOptions)) {
+          item.shippingOptions.forEach((option: any, index: number) => {
+            if (option && option.shippingCost) {
+              const shippingValue = option.shippingCost.value;
+              if (shippingValue !== undefined && shippingValue !== null) {
+                const parsedCost = parseFloat(shippingValue);
+                if (!isNaN(parsedCost) && parsedCost >= 0) {
+                  shippingCosts.push(parsedCost);
+                  console.log(`  - Found shipping cost from shippingOptions[${index}]: $${parsedCost}`);
+                }
+              }
+            }
+            // Also check for shippingServiceCost in shippingOptions
+            if (option && option.shippingServiceCost) {
+              const shippingValue = option.shippingServiceCost.value;
+              if (shippingValue !== undefined && shippingValue !== null) {
+                const parsedCost = parseFloat(shippingValue);
+                if (!isNaN(parsedCost) && parsedCost >= 0) {
+                  shippingCosts.push(parsedCost);
+                  console.log(`  - Found shipping cost from shippingOptions[${index}].shippingServiceCost: $${parsedCost}`);
+                }
+              }
+            }
+          });
+        }
+        
+        // Method 3: Check for estimatedDeliveryCost field
+        if (item.estimatedDeliveryCost && item.estimatedDeliveryCost.value) {
+          const shippingValue = item.estimatedDeliveryCost.value;
+          const parsedCost = parseFloat(shippingValue);
+          if (!isNaN(parsedCost) && parsedCost >= 0) {
+            shippingCosts.push(parsedCost);
+            console.log(`  - Found shipping cost from estimatedDeliveryCost: $${parsedCost}`);
+          }
+        }
+        
+        // Method 4: Check for shippingCost field directly on item
+        if (item.shippingCost && item.shippingCost.value) {
+          const shippingValue = item.shippingCost.value;
+          const parsedCost = parseFloat(shippingValue);
+          if (!isNaN(parsedCost) && parsedCost >= 0) {
+            shippingCosts.push(parsedCost);
+            console.log(`  - Found shipping cost from item.shippingCost: $${parsedCost}`);
+          }
+        }
+        
+        // Find the minimum shipping cost from all options
+        let hasShippingInfo = false;
+        if (shippingCosts.length > 0) {
+          shippingCost = Math.min(...shippingCosts);
+          hasShippingInfo = true;
+          console.log(`  - Selected minimum shipping cost: $${shippingCost} from ${shippingCosts.length} option(s)`);
+        } else {
+          // If no shipping information found, mark as unknown - don't default to 0
+          // Items without shipping info might have shipping costs not returned by the API
+          console.log(`  - Warning: No valid shipping cost found - item may have shipping costs not returned by API`);
+          shippingCost = 0; // Will be used for display, but we'll mark this item as having invalid shipping info
+          hasShippingInfo = false;
+        }
+        
+        // Check if shipping is free (only if we have valid shipping info)
+        const isFreeShipping = hasShippingInfo && (shippingCost === 0 || 
+                              (shippingCosts.length > 0 && shippingCosts.every(cost => cost === 0)));
+        
+        console.log(`  - Final calculation: Base $${basePrice} + Shipping $${shippingCost} = Total $${(basePrice + shippingCost).toFixed(2)} (HasShippingInfo: ${hasShippingInfo})`);
         
         return {
           ...item,
           totalPrice: basePrice + shippingCost,
           basePrice: basePrice,
           shippingCost: shippingCost,
-          isFreeShipping: isFreeShipping
+          isFreeShipping: isFreeShipping,
+          hasShippingInfo: hasShippingInfo // Flag to indicate if shipping info is valid
         };
       });
       
+      // Filter out items without valid shipping information
+      // Items without shipping info may have hidden shipping costs
+      let itemsWithValidShipping = itemsWithTotalPrice.filter((item: any) => item.hasShippingInfo);
+      
+      if (itemsWithValidShipping.length === 0) {
+        console.log('Warning: No items with valid shipping information found. Falling back to all items.');
+        // If no items have shipping info, we have to use all items but warn the user
+        itemsWithValidShipping = itemsWithTotalPrice;
+      }
+      
       // Sort by total price, with free shipping as a tiebreaker
-      itemsWithTotalPrice.sort((a: any, b: any) => {
+      itemsWithValidShipping.sort((a: any, b: any) => {
         const priceDiff = a.totalPrice - b.totalPrice;
         if (Math.abs(priceDiff) < 0.01) { // If prices are essentially equal (within 1 cent)
           // Prefer free shipping
@@ -259,8 +323,14 @@ export async function findLowestPrice(searchTerm: string, isbn: string): Promise
         return priceDiff;
       });
       
-      // Get the lowest priced item
-      const lowestPricedItem = itemsWithTotalPrice[0];
+      // Get the lowest priced item (from items with valid shipping info)
+      const lowestPricedItem = itemsWithValidShipping[0];
+      
+      // Log if we had to exclude items without shipping info
+      const excludedCount = itemsWithTotalPrice.length - itemsWithValidShipping.length;
+      if (excludedCount > 0) {
+        console.log(`Excluded ${excludedCount} item(s) without valid shipping information from lowest price calculation`);
+      }
       const lowestBasePrice = lowestPricedItem.basePrice;
       const lowestShippingCost = lowestPricedItem.shippingCost;
       const lowestTotalPrice = lowestPricedItem.totalPrice;
@@ -394,34 +464,99 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
       const itemsWithTotalPrice = filteredItems.map((item: any) => {
         const basePrice = parseFloat(item.price.value);
         
-        // Check for shipping cost in the correct field structure
+        // Comprehensive shipping cost extraction - check all possible fields and options
         let shippingCost = 0;
+        const shippingCosts: number[] = []; // Collect all valid shipping costs to find minimum
+        
+        // Method 1: Check direct shipping.shippingCost field
         if (item.shipping && item.shipping.shippingCost) {
-          shippingCost = parseFloat(item.shipping.shippingCost.value);
-        } else if (item.shippingOptions && item.shippingOptions[0] && item.shippingOptions[0].shippingCost) {
-          // Fallback to shippingOptions if shipping field doesn't exist
-          shippingCost = parseFloat(item.shippingOptions[0].shippingCost.value);
+          const shippingValue = item.shipping.shippingCost.value;
+          if (shippingValue !== undefined && shippingValue !== null) {
+            const parsedCost = parseFloat(shippingValue);
+            if (!isNaN(parsedCost) && parsedCost >= 0) {
+              shippingCosts.push(parsedCost);
+            }
+          }
         }
         
-        // Check if shipping is free (common for books)
-        const isFreeShipping = shippingCost === 0 || 
-                              (item.shipping && item.shipping.shippingCost && 
-                               item.shipping.shippingCost.value === '0.00') ||
-                              (item.shippingOptions && item.shippingOptions[0] && 
-                               item.shippingOptions[0].shippingCost && 
-                               item.shippingOptions[0].shippingCost.value === '0.00');
+        // Method 2: Check shippingOptions array - find minimum across ALL options
+        if (item.shippingOptions && Array.isArray(item.shippingOptions)) {
+          item.shippingOptions.forEach((option: any) => {
+            if (option && option.shippingCost) {
+              const shippingValue = option.shippingCost.value;
+              if (shippingValue !== undefined && shippingValue !== null) {
+                const parsedCost = parseFloat(shippingValue);
+                if (!isNaN(parsedCost) && parsedCost >= 0) {
+                  shippingCosts.push(parsedCost);
+                }
+              }
+            }
+            // Also check for shippingServiceCost in shippingOptions
+            if (option && option.shippingServiceCost) {
+              const shippingValue = option.shippingServiceCost.value;
+              if (shippingValue !== undefined && shippingValue !== null) {
+                const parsedCost = parseFloat(shippingValue);
+                if (!isNaN(parsedCost) && parsedCost >= 0) {
+                  shippingCosts.push(parsedCost);
+                }
+              }
+            }
+          });
+        }
+        
+        // Method 3: Check for estimatedDeliveryCost field
+        if (item.estimatedDeliveryCost && item.estimatedDeliveryCost.value) {
+          const shippingValue = item.estimatedDeliveryCost.value;
+          const parsedCost = parseFloat(shippingValue);
+          if (!isNaN(parsedCost) && parsedCost >= 0) {
+            shippingCosts.push(parsedCost);
+          }
+        }
+        
+        // Method 4: Check for shippingCost field directly on item
+        if (item.shippingCost && item.shippingCost.value) {
+          const shippingValue = item.shippingCost.value;
+          const parsedCost = parseFloat(shippingValue);
+          if (!isNaN(parsedCost) && parsedCost >= 0) {
+            shippingCosts.push(parsedCost);
+          }
+        }
+        
+        // Find the minimum shipping cost from all options
+        let hasShippingInfo = false;
+        if (shippingCosts.length > 0) {
+          shippingCost = Math.min(...shippingCosts);
+          hasShippingInfo = true;
+        } else {
+          // If no shipping information found, mark as unknown
+          shippingCost = 0;
+          hasShippingInfo = false;
+        }
+        
+        // Check if shipping is free (only if we have valid shipping info)
+        const isFreeShipping = hasShippingInfo && (shippingCost === 0 || 
+                              (shippingCosts.length > 0 && shippingCosts.every(cost => cost === 0)));
         
         return {
           ...item,
           totalPrice: basePrice + shippingCost,
           basePrice: basePrice,
           shippingCost: shippingCost,
-          isFreeShipping: isFreeShipping
+          isFreeShipping: isFreeShipping,
+          hasShippingInfo: hasShippingInfo
         };
       });
       
+      // Filter out items without valid shipping information
+      let itemsWithValidShipping = itemsWithTotalPrice.filter((item: any) => item.hasShippingInfo);
+      
+      if (itemsWithValidShipping.length === 0) {
+        // If no items have shipping info, fall back to all items
+        itemsWithValidShipping = itemsWithTotalPrice;
+      }
+      
       // Sort by total price, with free shipping as a tiebreaker
-      itemsWithTotalPrice.sort((a: any, b: any) => {
+      itemsWithValidShipping.sort((a: any, b: any) => {
         const priceDiff = a.totalPrice - b.totalPrice;
         if (Math.abs(priceDiff) < 0.01) { // If prices are essentially equal (within 1 cent)
           // Prefer free shipping
@@ -431,16 +566,17 @@ export async function getLowestPriceDetails(searchTerm: string, isbn: string): P
         return priceDiff;
       });
       
-      // Return the full details for debugging
-      const items = itemsWithTotalPrice;
+      // Return the full details for debugging (use itemsWithValidShipping for lowest price)
+      const items = itemsWithTotalPrice; // Keep all items for debugging
+      const lowestPriceItems = itemsWithValidShipping; // Use filtered items for lowest price calculation
       
       // Format the response for our needs
       return {
-        lowestPrice: items.length > 0 ? items[0].totalPrice : null,
-        basePrice: items.length > 0 ? items[0].basePrice : null,
-        shippingCost: items.length > 0 ? items[0].shippingCost : null,
-        isFreeShipping: items.length > 0 ? items[0].isFreeShipping : null,
-        condition: items.length > 0 ? items[0].condition : null,
+        lowestPrice: lowestPriceItems.length > 0 ? lowestPriceItems[0].totalPrice : null,
+        basePrice: lowestPriceItems.length > 0 ? lowestPriceItems[0].basePrice : null,
+        shippingCost: lowestPriceItems.length > 0 ? lowestPriceItems[0].shippingCost : null,
+        isFreeShipping: lowestPriceItems.length > 0 ? lowestPriceItems[0].isFreeShipping : null,
+        condition: lowestPriceItems.length > 0 ? lowestPriceItems[0].condition : null,
         itemCount: filteredItems.length,
         usedCount,
         newCount,
