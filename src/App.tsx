@@ -65,6 +65,26 @@ function App() {
   const [calculatorVisible, setCalculatorVisible] = useState(false);
   const quickScanInputRef = useRef<HTMLInputElement>(null);
 
+  // Auto-focus input when window regains focus (after viewing external pages)
+  useEffect(() => {
+    const handleFocus = () => {
+      // Only refocus if we have search results (meaning we're in the results view)
+      // and the input field exists
+      if (searchResult && quickScanInputRef.current) {
+        // Small delay to ensure the window is fully focused
+        setTimeout(() => {
+          quickScanInputRef.current?.focus();
+        }, 100);
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [searchResult]);
+
   // Utility functions
   const safeOpenExternalLink = (url: string) => {
     try {
