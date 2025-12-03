@@ -486,7 +486,7 @@ function App() {
                 // Format search query with + signs between words (like eBay expects)
                 const formattedQuery = searchQuery.replace(/\s+/g, '+');
                 
-                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${formattedQuery}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&tabName=SOLD&tz=Australia%2FMelbourne`;
+                const terapeakUrl = `https://www.ebay.com.au/sh/research?marketplace=EBAY-AU&keywords=${formattedQuery}&dayRange=1095&endDate=${endDate}&startDate=${startDate}&categoryId=0&offset=0&limit=50&sorting=-datelastsold&tabName=SOLD&tz=Australia%2FMelbourne`;
                 safeOpenExternalLink(terapeakUrl);
               }}
             >
